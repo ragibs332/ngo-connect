@@ -1,0 +1,16 @@
+{
+  "name": "ngo-connect-fullstack",
+  "version": "1.0.0",
+  "description": "NGO Connect — Full-Stack Community Emergency Relief & Social Impact Platform",
+  "main": "server/server.js",
+  "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "node server/server.js",
+    "dev:server": "node server/server.js",
+    "dev:client": "npm run dev --prefix client"
+  },
+  "keywords": ["ngo", "emergency", "relief", "adoption", "donations", "volunteering"],
+  "author": "",
+  "license": "ISC"
+}

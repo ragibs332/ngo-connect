@@ -1,0 +1,1210 @@
+{
+  "users": [
+    {
+      "id": "user-rohan",
+      "name": "Rohan Sharma",
+      "email": "rohan.sharma@example.com",
+      "phone": "+91 98765 43210",
+      "role": "public",
+      "city": "Mumbai",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "karmaPoints": 1170,
+      "badges": [
+        "First Responder",
+        "Kind Donor",
+        "Certified Volunteer"
+      ]
+    },
+    {
+      "id": "ngo-hope",
+      "name": "Priya Deshmukh (Coordinator)",
+      "email": "contact@hopehorizon.org",
+      "phone": "+91 98200 11223",
+      "role": "ngo",
+      "ngoId": "ngo-1",
+      "city": "Mumbai",
+      "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80"
+    },
+    {
+      "id": "admin-root",
+      "name": "Ananya Roy (Platform Admin)",
+      "email": "admin@ngoconnect.org",
+      "phone": "+91 91100 99887",
+      "role": "admin",
+      "city": "Pan India",
+      "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80"
+    }
+  ],
+  "ngos": [
+    {
+      "id": "ngo-1",
+      "name": "Hope Horizon Child Care & Shelter",
+      "category": "child",
+      "subCategories": [
+        "child",
+        "homeless",
+        "medical"
+      ],
+      "darpanId": "MH/2019/0234190",
+      "registrationNo": "F-44921/MUM",
+      "isVerified": true,
+      "verificationStatus": "verified",
+      "city": "Mumbai",
+      "area": "Andheri West",
+      "geo": {
+        "lat": 19.1136,
+        "lng": 72.8697
+      },
+      "phone": "+91 98200 11223",
+      "email": "care@hopehorizon.org",
+      "website": "https://hopehorizon.org",
+      "logo": "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=150&auto=format&fit=crop&q=80",
+      "banner": "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80",
+      "establishedYear": 2014,
+      "description": "Dedicated to rescuing vulnerable street children, providing emergency medical aid, nourishment, and facilitating legal adoption discovery through official CARA channels.",
+      "rating": 4.9,
+      "activeVolunteers": 140,
+      "verifiedDocuments": [
+        "80G_Certificate.pdf",
+        "Darpan_Registration.pdf",
+        "CARA_Affiliation_NOC.pdf"
+      ],
+      "urgentNeeds": [
+        {
+          "id": "need-1",
+          "title": "Pediatric Nutrition Kits (100 boxes)",
+          "priority": "high",
+          "fundsNeeded": 35000,
+          "fundsCollected": 21000
+        },
+        {
+          "id": "need-2",
+          "title": "Volunteers for Weekend Remedial Math",
+          "priority": "medium",
+          "volunteersNeeded": 8,
+          "volunteersJoined": 5
+        }
+      ]
+    },
+    {
+      "id": "ngo-2",
+      "name": "Jeev Daya Animal Rescue & Hospital",
+      "category": "animal",
+      "subCategories": [
+        "animal",
+        "medical"
+      ],
+      "darpanId": "MH/2020/0119283",
+      "registrationNo": "TR-8921/MUM",
+      "isVerified": true,
+      "verificationStatus": "verified",
+      "city": "Mumbai",
+      "area": "Bandra East",
+      "geo": {
+        "lat": 19.0596,
+        "lng": 72.8406
+      },
+      "phone": "+91 98199 44332",
+      "email": "sos@jeevdaya.org",
+      "website": "https://jeevdayarescue.org",
+      "logo": "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=150&auto=format&fit=crop&q=80",
+      "banner": "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&auto=format&fit=crop&q=80",
+      "establishedYear": 2017,
+      "description": "24/7 Mobile Veterinary Ambulance and trauma sanctuary for stray animals, cows, birds, and distress wildlife across Greater Mumbai.",
+      "rating": 4.8,
+      "activeVolunteers": 95,
+      "verifiedDocuments": [
+        "Veterinary_Council_License.pdf",
+        "FCRA_Compliance.pdf"
+      ],
+      "urgentNeeds": [
+        {
+          "id": "need-3",
+          "title": "Emergency Antiseptic & Bandage Refill",
+          "priority": "high",
+          "fundsNeeded": 18000,
+          "fundsCollected": 12500
+        }
+      ]
+    },
+    {
+      "id": "ngo-3",
+      "name": "Sanjivani Old Age Home & Palliative Care",
+      "category": "elderly",
+      "subCategories": [
+        "elderly",
+        "medical",
+        "disability"
+      ],
+      "darpanId": "MH/2018/0099411",
+      "registrationNo": "SOC-6612/THN",
+      "isVerified": true,
+      "verificationStatus": "verified",
+      "city": "Mumbai",
+      "area": "Thane West",
+      "geo": {
+        "lat": 19.2183,
+        "lng": 72.9781
+      },
+      "phone": "+91 98212 99001",
+      "email": "contact@sanjivanioldage.org",
+      "website": "https://sanjivanioldage.org",
+      "logo": "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=150&auto=format&fit=crop&q=80",
+      "banner": "https://images.unsplash.com/photo-1516726817505-f5ed825624d8?w=800&auto=format&fit=crop&q=80",
+      "establishedYear": 2012,
+      "description": "Providing dignifying living shelters, geriatric healthcare, and warm community companionship for abandoned and destitute elderly citizens.",
+      "rating": 4.9,
+      "activeVolunteers": 60,
+      "verifiedDocuments": [
+        "Senior_Citizen_Council_Cert.pdf",
+        "80G_TaxExemption.pdf"
+      ],
+      "urgentNeeds": [
+        {
+          "id": "need-4",
+          "title": "Winter Thermal Blankets & Heaters (50 units)",
+          "priority": "medium",
+          "fundsNeeded": 45000,
+          "fundsCollected": 38000
+        }
+      ]
+    },
+    {
+      "id": "ngo-4",
+      "name": "Aapda Seva Emergency & Homeless Relief",
+      "category": "homeless",
+      "subCategories": [
+        "homeless",
+        "medical",
+        "disability",
+        "other"
+      ],
+      "darpanId": "MH/2021/0442119",
+      "registrationNo": "TR-10291/MUM",
+      "isVerified": true,
+      "verificationStatus": "verified",
+      "city": "Mumbai",
+      "area": "Dadar Central",
+      "geo": {
+        "lat": 19.0178,
+        "lng": 72.8478
+      },
+      "phone": "+91 98333 77112",
+      "email": "info@aapdaseva.org",
+      "website": "https://aapdaseva.org",
+      "logo": "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=150&auto=format&fit=crop&q=80",
+      "banner": "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&auto=format&fit=crop&q=80",
+      "establishedYear": 2016,
+      "description": "Rapid response street relief teams distributing daily hot meals, hygiene packs, and temporary shelter to displaced and homeless individuals.",
+      "rating": 4.7,
+      "activeVolunteers": 210,
+      "verifiedDocuments": [
+        "Trust_Deed_Scan.pdf",
+        "Audited_Accounts_2025.pdf"
+      ],
+      "urgentNeeds": [
+        {
+          "id": "need-5",
+          "title": "500 Monsoonal Raincoats & Tarpaulins",
+          "priority": "critical",
+          "fundsNeeded": 60000,
+          "fundsCollected": 42000
+        }
+      ]
+    },
+    {
+      "id": "ngo-5",
+      "name": "Samarth Disability Empowerment Guild",
+      "category": "disability",
+      "subCategories": [
+        "disability",
+        "medical",
+        "child",
+        "elderly"
+      ],
+      "darpanId": "MH/2022/0771822",
+      "registrationNo": "REG-33120/PUN",
+      "isVerified": true,
+      "verificationStatus": "verified",
+      "city": "Pune",
+      "area": "Shivajinagar",
+      "geo": {
+        "lat": 18.5308,
+        "lng": 73.8474
+      },
+      "phone": "+91 97654 11220",
+      "email": "contact@samarthguild.org",
+      "website": "https://samarthguild.org",
+      "logo": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=150&auto=format&fit=crop&q=80",
+      "banner": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop&q=80",
+      "establishedYear": 2022,
+      "description": "Providing custom assistive mobility wheelchairs, prosthetic limbs, and vocational skill programs for persons with physical challenges.",
+      "rating": 4.6,
+      "activeVolunteers": 45,
+      "verifiedDocuments": [
+        "NGO_Darpan_Applied_Receipt.pdf",
+        "Panchayat_NOC.pdf"
+      ],
+      "urgentNeeds": []
+    }
+  ],
+  "incidents": [
+    {
+      "id": "inc-355145",
+      "category": "homeless",
+      "categoryLabel": "Homeless Person",
+      "categoryIcon": "🏠",
+      "priority": "critical",
+      "description": "testing",
+      "photoUrl": "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&auto=format&fit=crop&q=80",
+      "geo": {
+        "lat": 19.1197,
+        "lng": 72.8464
+      },
+      "address": "Andheri West (Near Metro Station)",
+      "isAnonymous": false,
+      "reporterId": "user-rohan",
+      "reporterName": "Rohan Sharma",
+      "reporterPhone": "+91 98765 43210",
+      "assignedNgoId": "ngo-1",
+      "assignedNgoName": "Hope Horizon Child Care & Shelter",
+      "distanceKm": 2.5,
+      "status": "resolved",
+      "statusTimeline": [
+        {
+          "status": "reported",
+          "title": "Incident Reported",
+          "timestamp": "2026-08-31T18:02:35.145Z",
+          "note": "Report submitted by Rohan Sharma with GPS & photo verification."
+        },
+        {
+          "status": "assigned",
+          "title": "NGO Auto-Assigned",
+          "timestamp": "2026-08-31T18:02:36.146Z",
+          "note": "Auto-routed to nearest verified NGO: Hope Horizon Child Care & Shelter (2.5 km away)."
+        },
+        {
+          "status": "accepted",
+          "title": "NGO Accepted Case",
+          "timestamp": "2026-08-31T18:02:45.254Z",
+          "note": "Case updated to NGO Accepted Case."
+        },
+        {
+          "status": "team_dispatched",
+          "title": "Team Dispatched",
+          "timestamp": "2026-08-31T18:02:47.661Z",
+          "note": "Case updated to Team Dispatched."
+        },
+        {
+          "status": "reached_location",
+          "title": "Reached Location",
+          "timestamp": "2026-08-31T18:02:49.252Z",
+          "note": "Case updated to Reached Location."
+        },
+        {
+          "status": "help_provided",
+          "title": "Help / Aid Provided",
+          "timestamp": "2026-08-31T18:02:51.522Z",
+          "note": "Case updated to Help / Aid Provided."
+        },
+        {
+          "status": "resolved",
+          "title": "Resolved Successfully",
+          "timestamp": "2026-08-31T18:02:53.518Z",
+          "note": "Case resolved successfully with on-ground aid."
+        }
+      ],
+      "createdAt": "2026-08-31T18:02:35.145Z",
+      "resolvedNote": "Case resolved successfully with on-ground aid."
+    },
+    {
+      "id": "inc-951629",
+      "category": "child",
+      "categoryLabel": "Child in Distress",
+      "categoryIcon": "👶",
+      "priority": "medium",
+      "description": "hiii testing this website for first time\n",
+      "photoUrl": "https://images.unsplash.com/photo-1543332164-6e82f355badc?w=600&auto=format&fit=crop&q=80",
+      "geo": {
+        "lat": 19.0558,
+        "lng": 72.8362
+      },
+      "address": "Bandra West (Near Talao / SV Road)",
+      "isAnonymous": false,
+      "reporterId": "user-rohan",
+      "reporterName": "Rohan Sharma",
+      "reporterPhone": "+91 98765 43210",
+      "assignedNgoId": "ngo-1",
+      "assignedNgoName": "Hope Horizon Child Care & Shelter",
+      "distanceKm": 7.3,
+      "status": "resolved",
+      "statusTimeline": [
+        {
+          "status": "reported",
+          "title": "Incident Reported",
+          "timestamp": "2026-08-31T17:55:51.629Z",
+          "note": "Report submitted by Rohan Sharma with GPS & photo verification."
+        },
+        {
+          "status": "assigned",
+          "title": "NGO Auto-Assigned",
+          "timestamp": "2026-08-31T17:55:52.629Z",
+          "note": "Auto-routed to nearest verified NGO: Hope Horizon Child Care & Shelter (7.3 km away)."
+        },
+        {
+          "status": "accepted",
+          "title": "NGO Accepted Case",
+          "timestamp": "2026-08-31T17:56:20.403Z",
+          "note": "Case updated to NGO Accepted Case."
+        },
+        {
+          "status": "team_dispatched",
+          "title": "Team Dispatched",
+          "timestamp": "2026-08-31T17:56:23.784Z",
+          "note": "Case updated to Team Dispatched."
+        },
+        {
+          "status": "reached_location",
+          "title": "Reached Location",
+          "timestamp": "2026-08-31T17:56:26.176Z",
+          "note": "Case updated to Reached Location."
+        },
+        {
+          "status": "help_provided",
+          "title": "Help / Aid Provided",
+          "timestamp": "2026-08-31T17:56:29.619Z",
+          "note": "Case updated to Help / Aid Provided."
+        },
+        {
+          "status": "resolved",
+          "title": "Resolved Successfully",
+          "timestamp": "2026-08-31T17:56:32.277Z",
+          "note": "Case resolved successfully with on-ground aid."
+        }
+      ],
+      "createdAt": "2026-08-31T17:55:51.629Z",
+      "resolvedNote": "Case resolved successfully with on-ground aid."
+    },
+    {
+      "id": "inc-101",
+      "category": "child",
+      "categoryLabel": "Child in Distress",
+      "categoryIcon": "👶",
+      "priority": "critical",
+      "description": "Found a 6-year-old child shivering and unaccompanied near Andheri West Metro Station Pillar #42. Looks dehydrated and scared.",
+      "photoUrl": "https://images.unsplash.com/photo-1543332164-6e82f355badc?w=600&auto=format&fit=crop&q=80",
+      "geo": {
+        "lat": 19.1197,
+        "lng": 72.8464
+      },
+      "address": "Opposite Metro Station Pillar #42, Andheri West, Mumbai",
+      "isAnonymous": false,
+      "reporterId": "user-rohan",
+      "reporterName": "Rohan Sharma",
+      "reporterPhone": "+91 98765 43210",
+      "assignedNgoId": "ngo-1",
+      "assignedNgoName": "Hope Horizon Child Care & Shelter",
+      "status": "resolved",
+      "statusTimeline": [
+        {
+          "status": "reported",
+          "title": "Incident Reported",
+          "timestamp": "2026-08-31T16:10:00Z",
+          "note": "Report submitted with GPS verification and photo."
+        },
+        {
+          "status": "assigned",
+          "title": "NGO Auto-Assigned",
+          "timestamp": "2026-08-31T16:11:15Z",
+          "note": "Auto-routed to nearest verified Child NGO (1.4 km away)."
+        },
+        {
+          "status": "accepted",
+          "title": "NGO Accepted",
+          "timestamp": "2026-08-31T16:13:00Z",
+          "note": "Hope Horizon SOS rescue coordinator accepted case."
+        },
+        {
+          "status": "team_dispatched",
+          "title": "Team Dispatched",
+          "timestamp": "2026-08-31T16:18:30Z",
+          "note": "Rescue van MH-02-CW-9120 dispatched with counselor & medical kit. ETA 12 mins."
+        },
+        {
+          "status": "reached_location",
+          "title": "Reached Location",
+          "timestamp": "2026-08-31T17:58:34.366Z",
+          "note": "Case updated to Reached Location."
+        },
+        {
+          "status": "help_provided",
+          "title": "Help / Aid Provided",
+          "timestamp": "2026-08-31T17:58:38.088Z",
+          "note": "Case updated to Help / Aid Provided."
+        },
+        {
+          "status": "resolved",
+          "title": "Resolved Successfully",
+          "timestamp": "2026-08-31T17:58:40.201Z",
+          "note": "Case resolved successfully with on-ground aid."
+        }
+      ],
+      "createdAt": "2026-08-31T16:10:00Z",
+      "resolvedNote": "Case resolved successfully with on-ground aid."
+    },
+    {
+      "id": "inc-102",
+      "category": "animal",
+      "categoryLabel": "Animal in Distress",
+      "categoryIcon": "🐕",
+      "priority": "high",
+      "description": "Injured stray golden retriever hit by a vehicle near Bandra Talao. Has bleeding paw and cannot stand up.",
+      "photoUrl": "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=600&auto=format&fit=crop&q=80",
+      "geo": {
+        "lat": 19.0558,
+        "lng": 72.8362
+      },
+      "address": "Near Bandra Talao, SV Road, Bandra West, Mumbai",
+      "isAnonymous": true,
+      "reporterId": null,
+      "reporterName": "Anonymous Citizen",
+      "reporterPhone": null,
+      "assignedNgoId": "ngo-2",
+      "assignedNgoName": "Jeev Daya Animal Rescue & Hospital",
+      "status": "help_provided",
+      "statusTimeline": [
+        {
+          "status": "reported",
+          "title": "Incident Reported",
+          "timestamp": "2026-08-31T14:00:00Z",
+          "note": "Anonymous report filed."
+        },
+        {
+          "status": "assigned",
+          "title": "NGO Auto-Assigned",
+          "timestamp": "2026-08-31T14:01:00Z",
+          "note": "Routed to Jeev Daya Animal Rescue (0.8 km away)."
+        },
+        {
+          "status": "accepted",
+          "title": "NGO Accepted",
+          "timestamp": "2026-08-31T14:05:00Z",
+          "note": "Dr. Sameer and ambulance team notified."
+        },
+        {
+          "status": "team_dispatched",
+          "title": "Team Dispatched",
+          "timestamp": "2026-08-31T14:12:00Z",
+          "note": "Ambulance on route."
+        },
+        {
+          "status": "reached_location",
+          "title": "Reached Location",
+          "timestamp": "2026-08-31T14:26:00Z",
+          "note": "Team secured the dog with safety leash."
+        },
+        {
+          "status": "help_provided",
+          "title": "Help Provided",
+          "timestamp": "2026-08-31T14:45:00Z",
+          "note": "First aid applied, fractured paw splinted, moved to recovery ICU."
+        }
+      ],
+      "createdAt": "2026-08-31T14:00:00Z",
+      "resolvedNote": "Dog is stable at Bandra Animal Ward. Post-op updates will be posted."
+    },
+    {
+      "id": "inc-103",
+      "category": "elderly",
+      "categoryLabel": "Elderly Person Needing Help",
+      "categoryIcon": "👴",
+      "priority": "medium",
+      "description": "Elderly gentleman sitting disoriented on a bench in Thane Station East. Cannot recall address or contact details.",
+      "photoUrl": "https://images.unsplash.com/photo-1516726817505-f5ed825624d8?w=600&auto=format&fit=crop&q=80",
+      "geo": {
+        "lat": 19.186,
+        "lng": 72.9759
+      },
+      "address": "Platform 1 Exit, Thane Railway Station, Thane",
+      "isAnonymous": false,
+      "reporterId": "user-rohan",
+      "reporterName": "Rohan Sharma",
+      "reporterPhone": "+91 98765 43210",
+      "assignedNgoId": "ngo-3",
+      "assignedNgoName": "Sanjivani Old Age Home & Palliative Care",
+      "status": "resolved",
+      "statusTimeline": [
+        {
+          "status": "reported",
+          "title": "Incident Reported",
+          "timestamp": "2026-08-30T10:00:00Z",
+          "note": "Report submitted."
+        },
+        {
+          "status": "assigned",
+          "title": "NGO Auto-Assigned",
+          "timestamp": "2026-08-30T10:02:00Z",
+          "note": "Routed to Sanjivani Care."
+        },
+        {
+          "status": "accepted",
+          "title": "NGO Accepted",
+          "timestamp": "2026-08-30T10:06:00Z",
+          "note": "Coordinator accepted case."
+        },
+        {
+          "status": "team_dispatched",
+          "title": "Team Dispatched",
+          "timestamp": "2026-08-30T10:20:00Z",
+          "note": "Team arrived at station with local police assistance."
+        },
+        {
+          "status": "reached_location",
+          "title": "Reached Location",
+          "timestamp": "2026-08-30T10:40:00Z",
+          "note": "Elderly person identified."
+        },
+        {
+          "status": "help_provided",
+          "title": "Help Provided",
+          "timestamp": "2026-08-30T11:15:00Z",
+          "note": "Medical checkup done, family trace initiated."
+        },
+        {
+          "status": "resolved",
+          "title": "Resolved",
+          "timestamp": "2026-08-30T14:30:00Z",
+          "note": "Safely reunited with his son after missing complaint verification."
+        }
+      ],
+      "createdAt": "2026-08-30T10:00:00Z",
+      "resolvedNote": "Reunited safely with family under Thane Police station supervision."
+    }
+  ],
+  "adoptionListings": [
+    {
+      "id": "adopt-1",
+      "ngoId": "ngo-1",
+      "ngoName": "Hope Horizon Child Care & Shelter",
+      "type": "child",
+      "name": "Aarav",
+      "gender": "Male",
+      "age": "4 years",
+      "photo": "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=500&auto=format&fit=crop&q=80",
+      "healthStatus": "Healthy & Vaccinated",
+      "interests": "Loves drawing, puzzles, and playing with building blocks.",
+      "backgroundNote": "Legally free for adoption under Child Welfare Committee (CWC) Order No. MH/CWC/2025/881. All preliminary verifications completed.",
+      "caraRegistrationRequired": true,
+      "caraNote": "Official Central Adoption Resource Authority (CARA) registration code: CARA-IN-2025-9011. NGO Connect acts solely as a discovery window.",
+      "status": "available",
+      "createdAt": "2026-08-15T09:00:00Z"
+    },
+    {
+      "id": "adopt-2",
+      "ngoId": "ngo-1",
+      "ngoName": "Hope Horizon Child Care & Shelter",
+      "type": "child",
+      "name": "Meera & Tanvi (Siblings)",
+      "gender": "Female",
+      "age": "5 & 7 years",
+      "photo": "https://images.unsplash.com/photo-1485546246426-74dc88dec4d9?w=500&auto=format&fit=crop&q=80",
+      "healthStatus": "Fully Immunized & Active",
+      "interests": "Storybooks, rhythmic music, and outdoor games.",
+      "backgroundNote": "Bonded biological sisters seeking a loving forever home together under CWC guidance.",
+      "caraRegistrationRequired": true,
+      "caraNote": "CARA Registered Sibling Placement Category. Legal clearance granted under JJ Act 2015.",
+      "status": "in_process",
+      "createdAt": "2026-08-10T11:30:00Z"
+    },
+    {
+      "id": "adopt-3",
+      "ngoId": "ngo-3",
+      "ngoName": "Sanjivani Old Age Home & Palliative Care",
+      "type": "elderly",
+      "name": "Shantabai Kulkarni",
+      "gender": "Female",
+      "age": "74 years",
+      "photo": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop&q=80",
+      "healthStatus": "Mild Arthritis, Mentally Sharp",
+      "interests": "Loves narrating Marathi folk stories, knitting, and listening to devotional bhajans.",
+      "backgroundNote": "Resident of Sanjivani since 2023. Seeking a weekend sponsor/family companion for festive visits and medical support.",
+      "caraRegistrationRequired": false,
+      "caraNote": "Elderly Sponsorship & Companionship Program (Non-Adoption). Monthly care stipend or regular volunteer visits.",
+      "status": "available",
+      "createdAt": "2026-08-01T14:00:00Z"
+    },
+    {
+      "id": "adopt-4",
+      "ngoId": "ngo-3",
+      "ngoName": "Sanjivani Old Age Home & Palliative Care",
+      "type": "elderly",
+      "name": "Rameshwar Prasad",
+      "gender": "Male",
+      "age": "81 years",
+      "photo": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80",
+      "healthStatus": "Hypertension Managed, Enjoys Walking",
+      "interests": "Former school teacher, enjoys reading daily newspapers and playing chess with guests.",
+      "backgroundNote": "Looking for monthly medicine sponsor (₹2,500/mo) and compassionate youth visitors.",
+      "caraRegistrationRequired": false,
+      "caraNote": "Elderly Care Sponsorship & Mentorship Program.",
+      "status": "available",
+      "createdAt": "2026-08-05T10:00:00Z"
+    }
+  ],
+  "adoptionInquiries": [
+    {
+      "id": "inq-201",
+      "listingId": "adopt-3",
+      "personName": "Shantabai Kulkarni",
+      "type": "elderly",
+      "userId": "user-rohan",
+      "userName": "Rohan Sharma",
+      "userPhone": "+91 98765 43210",
+      "userEmail": "rohan.sharma@example.com",
+      "inquiryType": "Sponsorship & Monthly Weekend Visits",
+      "message": "My family and I would love to sponsor Shantabai's healthcare and visit her every 2nd Saturday for tea and conversation.",
+      "status": "approved",
+      "ngoNote": "Visit confirmed for next Saturday 4 PM at Thane Sanctuary.",
+      "createdAt": "2026-08-20T12:00:00Z"
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "camp-1",
+      "ngoId": "ngo-1",
+      "ngoName": "Hope Horizon Child Care & Shelter",
+      "title": "Malnutrition Zero: Feed 200 Slum Children Daily",
+      "category": "child",
+      "banner": "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=80",
+      "targetAmount": 150000,
+      "raisedAmount": 126000,
+      "donorCount": 86,
+      "daysLeft": 12,
+      "description": "Providing hot protein-rich breakfasts, boiled eggs, fresh seasonal fruits, and milk every morning to children across 4 informal settlements in Mumbai.",
+      "taxExempt80G": true,
+      "transparencyUpdates": [
+        {
+          "date": "2026-08-28",
+          "title": "August Nutrition Kit Distribution Complete",
+          "cost": "₹42,000",
+          "description": "Distributed 200 grocery bags containing pulses, milk powders, and multivitamins with receipt documentation.",
+          "proofPhoto": "https://images.unsplash.com/photo-1593113598332-cd288d649433?w=600&auto=format&fit=crop&q=80"
+        }
+      ]
+    },
+    {
+      "id": "camp-2",
+      "ngoId": "ngo-2",
+      "ngoName": "Jeev Daya Animal Rescue & Hospital",
+      "title": "Emergency Mobile Veterinary Ambulance Fund",
+      "category": "animal",
+      "banner": "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&auto=format&fit=crop&q=80",
+      "targetAmount": 300000,
+      "raisedAmount": 245000,
+      "donorCount": 162,
+      "daysLeft": 8,
+      "description": "Equipping our second street ambulance with oxygen concentrators, hydraulic stretcher, and sterilization tools to rescue hit-and-run animals 24x7.",
+      "taxExempt80G": true,
+      "transparencyUpdates": [
+        {
+          "date": "2026-08-22",
+          "title": "Vehicle Chassis Acquired",
+          "cost": "₹1,80,000",
+          "description": "Purchased vehicle; currently in fabrication for medical racks and solar inverter.",
+          "proofPhoto": "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=600&auto=format&fit=crop&q=80"
+        }
+      ]
+    },
+    {
+      "id": "camp-3",
+      "ngoId": "ngo-3",
+      "ngoName": "Sanjivani Old Age Home & Palliative Care",
+      "title": "Geriatric Medical Care & Dialysis Support",
+      "category": "elderly",
+      "banner": "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=800&auto=format&fit=crop&q=80",
+      "targetAmount": 120000,
+      "raisedAmount": 92000,
+      "donorCount": 61,
+      "daysLeft": 19,
+      "description": "Funding essential bi-weekly dialysis, insulin stock, and specialized orthopedic physical therapy for 35 destitute senior citizens.",
+      "taxExempt80G": true,
+      "transparencyUpdates": []
+    }
+  ],
+  "donations": [
+    {
+      "id": "don-268967",
+      "campaignId": "camp-1",
+      "campaignTitle": "Malnutrition Zero: Feed 200 Slum Children Daily",
+      "ngoId": "ngo-1",
+      "ngoName": "Hope Horizon Child Care & Shelter",
+      "userId": "user-rohan",
+      "donorName": "Rohan Sharma",
+      "donorEmail": "rohan.sharma@example.com",
+      "donorPhone": "+91 98765 43210",
+      "amount": 5000,
+      "isAnonymousPublic": true,
+      "showDonorName": false,
+      "paymentMethod": "UPI (Google Pay / PhonePe)",
+      "transactionId": "TXN_1788199268967",
+      "receiptNo": "80G-NGO-1-2026-5071",
+      "createdAt": "2026-08-31T18:01:08.967Z"
+    },
+    {
+      "id": "don-254709",
+      "campaignId": "camp-1",
+      "campaignTitle": "Malnutrition Zero: Feed 200 Slum Children Daily",
+      "ngoId": "ngo-1",
+      "ngoName": "Hope Horizon Child Care & Shelter",
+      "userId": "user-rohan",
+      "donorName": "Rohan Sharma",
+      "donorEmail": "rohan.sharma@example.com",
+      "donorPhone": "+91 98765 43210",
+      "amount": 2500,
+      "isAnonymousPublic": true,
+      "showDonorName": false,
+      "paymentMethod": "UPI (Google Pay / PhonePe)",
+      "transactionId": "TXN_1788199254709",
+      "receiptNo": "80G-NGO-1-2026-4302",
+      "createdAt": "2026-08-31T18:00:54.709Z"
+    },
+    {
+      "id": "don-501",
+      "campaignId": "camp-1",
+      "campaignTitle": "Malnutrition Zero: Feed 200 Slum Children Daily",
+      "ngoId": "ngo-1",
+      "ngoName": "Hope Horizon Child Care & Shelter",
+      "userId": "user-rohan",
+      "donorName": "Rohan Sharma",
+      "donorEmail": "rohan.sharma@example.com",
+      "donorPhone": "+91 98765 43210",
+      "amount": 2500,
+      "isAnonymousPublic": true,
+      "showDonorName": false,
+      "paymentMethod": "UPI (Google Pay)",
+      "transactionId": "TXN_UPI_8829103991",
+      "receiptNo": "80G-NGO1-2026-0812",
+      "createdAt": "2026-08-25T15:30:00Z"
+    },
+    {
+      "id": "don-502",
+      "campaignId": "camp-2",
+      "campaignTitle": "Emergency Mobile Veterinary Ambulance Fund",
+      "ngoId": "ngo-2",
+      "ngoName": "Jeev Daya Animal Rescue & Hospital",
+      "userId": "user-rohan",
+      "donorName": "Rohan Sharma",
+      "donorEmail": "rohan.sharma@example.com",
+      "donorPhone": "+91 98765 43210",
+      "amount": 5000,
+      "isAnonymousPublic": false,
+      "showDonorName": true,
+      "paymentMethod": "Credit Card (HDFC)",
+      "transactionId": "TXN_CC_9918237190",
+      "receiptNo": "80G-NGO2-2026-0442",
+      "createdAt": "2026-08-27T11:15:00Z"
+    }
+  ],
+  "volunteeringDrives": [
+    {
+      "id": "vol-1",
+      "ngoId": "ngo-1",
+      "ngoName": "Hope Horizon Child Care",
+      "title": "Weekend Street Food & Joy Drive",
+      "category": "child",
+      "date": "2026-09-06",
+      "time": "09:00 AM - 01:00 PM",
+      "location": "Versova Beach Slum Cluster, Andheri West, Mumbai",
+      "slotsTotal": 20,
+      "slotsFilled": 15,
+      "description": "Distributing breakfast boxes, conducting drawing sessions, and distributing learning supplies for 80 children.",
+      "skillsNeeded": [
+        "Empathy",
+        "Storytelling",
+        "Logistics",
+        "Photography"
+      ],
+      "qrCheckInSecret": "QR_DRIVE_VERSOVA_2026_0906"
+    },
+    {
+      "id": "vol-2",
+      "ngoId": "ngo-2",
+      "ngoName": "Jeev Daya Animal Rescue",
+      "title": "Sunday Animal Shelter Care & Grooming Session",
+      "category": "animal",
+      "date": "2026-09-07",
+      "time": "10:00 AM - 02:00 PM",
+      "location": "Bandra Sanctuary, Mumbai",
+      "slotsTotal": 15,
+      "slotsFilled": 11,
+      "description": "Bathing shelter dogs, cleaning aviary enclosures, and helping vets dispense vitamin syrups.",
+      "skillsNeeded": [
+        "Animal Comfort",
+        "Gentle Handling",
+        "Hygiene Assistance"
+      ],
+      "qrCheckInSecret": "QR_DRIVE_BANDRA_2026_0907"
+    },
+    {
+      "id": "vol-3",
+      "ngoId": "ngo-3",
+      "ngoName": "Sanjivani Old Age Home",
+      "title": "Grandparents Day Celebration & Musical Evening",
+      "category": "elderly",
+      "date": "2026-09-13",
+      "time": "03:30 PM - 07:00 PM",
+      "location": "Sanjivani Campus, Thane West",
+      "slotsTotal": 25,
+      "slotsFilled": 18,
+      "description": "Performing acoustic music, playing antakshari, organizing chair yoga, and serving festive dinner.",
+      "skillsNeeded": [
+        "Singing / Music",
+        "Active Listening",
+        "Warm Hospitality"
+      ],
+      "qrCheckInSecret": "QR_DRIVE_THANE_2026_0913"
+    }
+  ],
+  "volunteerRegistrations": [
+    {
+      "id": "vreg-288159",
+      "driveId": "vol-1",
+      "driveTitle": "Weekend Street Food & Joy Drive",
+      "driveDate": "2026-09-06",
+      "driveLocation": "Versova Beach Slum Cluster, Andheri West, Mumbai",
+      "ngoName": "Hope Horizon Child Care",
+      "userId": "user-rohan",
+      "userName": "Rohan Sharma",
+      "userPhone": "+91 98765 43210",
+      "userEmail": "rohan.sharma@example.com",
+      "status": "approved",
+      "checkedIn": false,
+      "checkInTime": null,
+      "qrPassToken": "NGO_PASS_vreg-288159_vol-1_user-rohan"
+    },
+    {
+      "id": "vreg-1",
+      "driveId": "vol-1",
+      "userId": "user-rohan",
+      "userName": "Rohan Sharma",
+      "userPhone": "+91 98765 43210",
+      "userEmail": "rohan.sharma@example.com",
+      "status": "approved",
+      "checkedIn": true,
+      "checkInTime": "2026-08-24T09:15:00Z",
+      "qrPassToken": "PASS_ROHAN_VERSOVA_VOL1"
+    }
+  ],
+  "faqKnowledgeBase": [
+    {
+      "id": "faq-1",
+      "category": "incident",
+      "question": "How does the Emergency Incident Auto-Routing system work?",
+      "answer": "When you report an incident with location and emergency category, NGO Connect uses a geodistance matching algorithm (Haversine formula) to locate the closest verified NGO specialized in that emergency. The NGO receives a priority dispatch notification with your GPS map pin and photo.",
+      "tags": [
+        "incident",
+        "emergency",
+        "routing",
+        "gps",
+        "dispatch"
+      ]
+    },
+    {
+      "id": "faq-2",
+      "category": "adoption",
+      "question": "Can I legally adopt a child directly through NGO Connect?",
+      "answer": "No. Child adoption in India is strictly governed by the Central Adoption Resource Authority (CARA) under the Juvenile Justice (Care and Protection of Children) Act. NGO Connect functions strictly as a verified discovery and NGO inquiry window. All legal adoptions must be formally processed via the CARINGS portal (cara.wcd.gov.in) with authorized Specialised Adoption Agencies (SAAs).",
+      "tags": [
+        "adoption",
+        "child",
+        "cara",
+        "legal",
+        "jj act",
+        "carings"
+      ]
+    },
+    {
+      "id": "faq-3",
+      "category": "adoption",
+      "question": "What is Elderly Sponsorship?",
+      "answer": "Elderly sponsorship allows compassionate citizens to sponsor monthly medical expenses, nutrition, and organize scheduled visits/companionship with senior citizens residing in verified old-age homes without complex legal proceedings.",
+      "tags": [
+        "elderly",
+        "sponsorship",
+        "visits",
+        "old age"
+      ]
+    },
+    {
+      "id": "faq-4",
+      "category": "donation",
+      "question": "How does Anonymous Donation protect my identity?",
+      "answer": "By default, donations on NGO Connect are Anonymous. Your identity is encrypted and stored strictly for generating your 80G tax receipt and fraud prevention. Neither the NGO coordinators nor the public campaign feed will see your name or phone number unless you explicitly enable 'Show my name publicly'.",
+      "tags": [
+        "donation",
+        "anonymous",
+        "privacy",
+        "80g",
+        "receipt"
+      ]
+    },
+    {
+      "id": "faq-5",
+      "category": "verification",
+      "question": "How does NGO Connect verify NGOs and Orphanages?",
+      "answer": "Platform Administrators strictly verify government Darpan IDs, 12A/80G certificates, FCRA clearance, FCRA/Trust Deed registration, and on-ground track records before granting the Verified Green Checkmark.",
+      "tags": [
+        "verification",
+        "darpan",
+        "trust",
+        "admin",
+        "certificate"
+      ]
+    },
+    {
+      "id": "faq-6",
+      "category": "volunteering",
+      "question": "How does the QR Code volunteer check-in work?",
+      "answer": "Once you register for a drive and the NGO approves your slot, a digital QR Pass is generated in your app. When you arrive at the venue, the NGO coordinator scans your QR code on their device to instantaneously mark your attendance and credit your volunteer karma score.",
+      "tags": [
+        "volunteer",
+        "qr",
+        "checkin",
+        "attendance",
+        "karma"
+      ]
+    }
+  ],
+  "disputes": [
+    {
+      "id": "disp-1",
+      "targetType": "incident",
+      "targetId": "inc-102",
+      "reportedBy": "Citizen User",
+      "reason": "Duplicate report created for same street location.",
+      "status": "reviewed",
+      "resolution": "Merged duplicate thread into incident #inc-102."
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-u-1788199373518",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Resolved Successfully 📍",
+      "message": "Hope Horizon Child Care & Shelter: Resolved Successfully",
+      "timestamp": "2026-08-31T18:02:53.518Z",
+      "read": false,
+      "link": "/incidents/inc-355145"
+    },
+    {
+      "id": "notif-u-1788199371522",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Help / Aid Provided 📍",
+      "message": "Hope Horizon Child Care & Shelter: Help / Aid Provided",
+      "timestamp": "2026-08-31T18:02:51.522Z",
+      "read": false,
+      "link": "/incidents/inc-355145"
+    },
+    {
+      "id": "notif-u-1788199369252",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Reached Location 📍",
+      "message": "Hope Horizon Child Care & Shelter: Reached Location",
+      "timestamp": "2026-08-31T18:02:49.252Z",
+      "read": false,
+      "link": "/incidents/inc-355145"
+    },
+    {
+      "id": "notif-u-1788199367661",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Team Dispatched 📍",
+      "message": "Hope Horizon Child Care & Shelter: Team Dispatched",
+      "timestamp": "2026-08-31T18:02:47.661Z",
+      "read": false,
+      "link": "/incidents/inc-355145"
+    },
+    {
+      "id": "notif-u-1788199365254",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: NGO Accepted Case 📍",
+      "message": "Hope Horizon Child Care & Shelter: NGO Accepted Case",
+      "timestamp": "2026-08-31T18:02:45.254Z",
+      "read": false,
+      "link": "/incidents/inc-355145"
+    },
+    {
+      "id": "notif-c-1788199355146",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident #inc-355145 Dispatched",
+      "message": "Assigned to Hope Horizon Child Care & Shelter. Rescue team alerted.",
+      "timestamp": "2026-08-31T18:02:35.145Z",
+      "read": false,
+      "link": "/incidents/inc-355145"
+    },
+    {
+      "id": "notif-1788199355146",
+      "targetRole": "ngo",
+      "ngoId": "ngo-1",
+      "title": "🚨 CRITICAL Priority Incident: Homeless Person",
+      "message": "Emergency reported at Andheri West (Near Metro Station) (2.5 km away). Urgency: CRITICAL",
+      "timestamp": "2026-08-31T18:02:35.145Z",
+      "read": false,
+      "link": "/ngo/incidents"
+    },
+    {
+      "id": "notif-don-1788199268967",
+      "targetRole": "ngo",
+      "ngoId": "ngo-1",
+      "title": "💰 New Donation of ₹5,000",
+      "message": "Received from an Anonymous Citizen for Malnutrition Zero: Feed 200 Slum Children Daily. Donor identity encrypted.",
+      "timestamp": "2026-08-31T18:01:08.967Z",
+      "read": false,
+      "link": "/ngo/donations"
+    },
+    {
+      "id": "notif-don-1788199254709",
+      "targetRole": "ngo",
+      "ngoId": "ngo-1",
+      "title": "💰 New Donation of ₹2,500",
+      "message": "Received from an Anonymous Citizen for Malnutrition Zero: Feed 200 Slum Children Daily. Donor identity encrypted.",
+      "timestamp": "2026-08-31T18:00:54.758Z",
+      "read": false,
+      "link": "/ngo/donations"
+    },
+    {
+      "id": "notif-u-1788199120201",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Resolved Successfully 📍",
+      "message": "Hope Horizon Child Care & Shelter: Resolved Successfully",
+      "timestamp": "2026-08-31T17:58:40.201Z",
+      "read": false,
+      "link": "/incidents/inc-101"
+    },
+    {
+      "id": "notif-u-1788199118088",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Help / Aid Provided 📍",
+      "message": "Hope Horizon Child Care & Shelter: Help / Aid Provided",
+      "timestamp": "2026-08-31T17:58:38.088Z",
+      "read": false,
+      "link": "/incidents/inc-101"
+    },
+    {
+      "id": "notif-u-1788199114366",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Reached Location 📍",
+      "message": "Hope Horizon Child Care & Shelter: Reached Location",
+      "timestamp": "2026-08-31T17:58:34.366Z",
+      "read": false,
+      "link": "/incidents/inc-101"
+    },
+    {
+      "id": "notif-u-1788198992277",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Resolved Successfully 📍",
+      "message": "Hope Horizon Child Care & Shelter: Resolved Successfully",
+      "timestamp": "2026-08-31T17:56:32.277Z",
+      "read": false,
+      "link": "/incidents/inc-951629"
+    },
+    {
+      "id": "notif-u-1788198989619",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Help / Aid Provided 📍",
+      "message": "Hope Horizon Child Care & Shelter: Help / Aid Provided",
+      "timestamp": "2026-08-31T17:56:29.619Z",
+      "read": false,
+      "link": "/incidents/inc-951629"
+    },
+    {
+      "id": "notif-u-1788198986176",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Reached Location 📍",
+      "message": "Hope Horizon Child Care & Shelter: Reached Location",
+      "timestamp": "2026-08-31T17:56:26.176Z",
+      "read": false,
+      "link": "/incidents/inc-951629"
+    },
+    {
+      "id": "notif-u-1788198983784",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: Team Dispatched 📍",
+      "message": "Hope Horizon Child Care & Shelter: Team Dispatched",
+      "timestamp": "2026-08-31T17:56:23.784Z",
+      "read": false,
+      "link": "/incidents/inc-951629"
+    },
+    {
+      "id": "notif-u-1788198980403",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident Update: NGO Accepted Case 📍",
+      "message": "Hope Horizon Child Care & Shelter: NGO Accepted Case",
+      "timestamp": "2026-08-31T17:56:20.403Z",
+      "read": false,
+      "link": "/incidents/inc-951629"
+    },
+    {
+      "id": "notif-c-1788198951629",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Incident #inc-951629 Dispatched",
+      "message": "Assigned to Hope Horizon Child Care & Shelter. Rescue team alerted.",
+      "timestamp": "2026-08-31T17:55:51.629Z",
+      "read": false,
+      "link": "/incidents/inc-951629"
+    },
+    {
+      "id": "notif-1788198951629",
+      "targetRole": "ngo",
+      "ngoId": "ngo-1",
+      "title": "🚨 MEDIUM Priority Incident: Child in Distress",
+      "message": "Emergency reported at Bandra West (Near Talao / SV Road) (7.3 km away). Urgency: MEDIUM",
+      "timestamp": "2026-08-31T17:55:51.629Z",
+      "read": false,
+      "link": "/ngo/incidents"
+    },
+    {
+      "id": "notif-1",
+      "targetRole": "public",
+      "userId": "user-rohan",
+      "title": "Rescue Update: Team Dispatched 🚨",
+      "message": "Hope Horizon dispatched their rescue vehicle for your reported Child in Distress at Andheri West.",
+      "timestamp": "2026-08-31T16:18:30Z",
+      "read": false,
+      "link": "/incidents/inc-101"
+    },
+    {
+      "id": "notif-2",
+      "targetRole": "ngo",
+      "ngoId": "ngo-1",
+      "title": "🚨 New Critical Incident Assigned",
+      "message": "Child in distress reported at Andheri Metro Pillar #42 (1.4 km away). Urgent response requested.",
+      "timestamp": "2026-08-31T16:11:15Z",
+      "read": true,
+      "link": "/ngo/incidents"
+    },
+    {
+      "id": "notif-3",
+      "targetRole": "admin",
+      "title": "New NGO Verification Pending",
+      "message": "Samarth Disability Empowerment Guild submitted registration documents for approval.",
+      "timestamp": "2026-08-31T12:00:00Z",
+      "read": false,
+      "link": "/admin/verifications"
+    }
+  ]
+}

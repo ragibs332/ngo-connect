@@ -186,8 +186,24 @@ export const Navbar = () => {
               )}
             </div>
 
+            {/* Login / Auth Portal Trigger */}
+            <button
+              onClick={() => setActiveTab('auth')}
+              className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-xl border transition-all ${
+                activeTab === 'auth'
+                  ? 'bg-slate-900 text-white border-slate-900'
+                  : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Portals & Login</span>
+            </button>
+
             {/* User Profile Mini Badge */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+            <div
+              onClick={() => setActiveTab(currentRole === ROLES.NGO ? 'ngo-profile' : currentRole === ROLES.ADMIN ? 'admin-dashboard' : 'profile')}
+              className="flex items-center gap-2 pl-2 border-l border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+            >
               <img
                 src={currentUser.avatar}
                 alt={currentUser.name}

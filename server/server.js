@@ -101,6 +101,178 @@ const routeIncidentToNearestNGO = (incident, ngos) => {
 };
 
 /* ==========================================================================
+   AUTHENTICATION API (Citizens, NGO Staff & Platform Admin)
+   ========================================================================== */
+
+// Send OTP simulation
+app.post('/api/auth/send-otp', (req, res) => {
+  const { phone } = req.body;
+  if (!phone) return res.status(400).json({ success: false, message: 'Phone number is required.' });
+
+  const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  res.json({
+    success: true,
+    message: `OTP sent successfully to ${phone}!`,
+    simulatedOtp: generatedOtp // Returned for seamless testing in demo mode
+  });
+});
+
+// Login endpoint
+app.post('/api/auth/login', (req, res) => {
+  const db = readDB();
+  const { role = 'public', identifier, password, otp } = req.body;
+
+  if (role === 'admin') {
+    // Admin Passcode check
+    if (password === 'admin123' || password === 'root' || !password) {
+      const adminUser = db.users.find(u => u.role === 'admin') || {
+        id: 'admin-root',
+        name: 'Ananya Roy (Platform Admin)',
+        email: 'admin@ngoconnect.org',
+        role: 'admin',
+        city: 'Pan-India',
+        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'
+      };
+      return res.json({ success: true, user: adminUser, token: `tok_admin_${Date.now()}` });
+    } else {
+      return res.status(401).json({ success: false, message: 'Invalid Admin passcode. Try "admin123".' });
+    }
+  }
+
+  if (role === 'ngo') {
+    // NGO Staff login
+    const ngoUser = db.users.find(u => u.role === 'ngo' && (u.email === identifier || u.phone === identifier)) || db.users.find(u => u.role === 'ngo');
+    return res.json({ success: true, user: ngoUser, token: `tok_ngo_${Date.now()}` });
+  }
+
+  // Public Citizen Login
+  let citizen = db.users.find(u => u.role === 'public' && (u.email === identifier || u.phone === identifier));
+  if (!citizen) {
+    citizen = db.users.find(u => u.role === 'public') || {
+      id: `user-${Date.now()}`,
+      name: identifier ? identifier.split('@')[0] : 'Citizen User',
+      email: identifier || 'citizen@example.com',
+      phone: '+91 98765 43210',
+      role: 'public',
+      city: 'Mumbai',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+      karmaPoints: 100
+    };
+  }
+
+  res.json({ success: true, user: citizen, token: `tok_user_${Date.now()}` });
+});
+
+// Citizen Registration
+app.post('/api/auth/register-user', (req, res) => {
+  const db = readDB();
+  const { name, email, phone, city } = req.body;
+
+  if (!name || !phone) {
+    return res.status(400).json({ success: false, message: 'Name and phone are required.' });
+  }
+
+  const newUser = {
+    id: `user-${Date.now().toString().slice(-6)}`,
+    name,
+    email: email || `${name.toLowerCase().replace(/\s+/g, '')}@example.com`,
+    phone,
+    role: 'public',
+    city: city || 'Mumbai',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+    karmaPoints: 50,
+    badges: ['New Member']
+  };
+
+  db.users.push(newUser);
+  writeDB(db);
+  res.status(201).json({ success: true, user: newUser, token: `tok_user_${Date.now()}` });
+});
+
+// NGO Onboarding Registration (creates NGO in 'pending' status for Admin queue)
+app.post('/api/auth/register-ngo', (req, res) => {
+  const db = readDB();
+  const {
+    ngoName,
+    coordinatorName,
+    email,
+    phone,
+    darpanId,
+    registrationNo,
+    category,
+    city,
+    area,
+    description
+  } = req.body;
+
+  if (!ngoName || !darpanId || !email) {
+    return res.status(400).json({ success: false, message: 'Organization name, Darpan ID, and email are required.' });
+  }
+
+  const ngoId = `ngo-${Date.now().toString().slice(-4)}`;
+  const newNgo = {
+    id: ngoId,
+    name: ngoName,
+    category: category || 'child',
+    subCategories: [category || 'child', 'medical'],
+    darpanId,
+    registrationNo: registrationNo || `REG-${Math.floor(10000 + Math.random() * 90000)}/MH`,
+    isVerified: false,
+    verificationStatus: 'pending',
+    city: city || 'Mumbai',
+    area: area || 'Central',
+    geo: { lat: 19.0760, lng: 72.8777 },
+    phone: phone || '+91 98000 00000',
+    email,
+    website: `https://${ngoName.toLowerCase().replace(/\s+/g, '')}.org`,
+    logo: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=150&auto=format&fit=crop&q=80',
+    banner: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80',
+    establishedYear: new Date().getFullYear(),
+    description: description || 'Non-profit organization dedicated to community relief.',
+    rating: 5.0,
+    activeVolunteers: 10,
+    verifiedDocuments: ['Darpan_Application.pdf', 'Trust_Deed.pdf'],
+    urgentNeeds: []
+  };
+
+  const coordinatorUser = {
+    id: `ngo-user-${Date.now().toString().slice(-4)}`,
+    name: coordinatorName || `${ngoName} Coordinator`,
+    email,
+    phone: phone || '+91 98000 00000',
+    role: 'ngo',
+    ngoId,
+    ngoName,
+    city: city || 'Mumbai',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'
+  };
+
+  db.ngos.unshift(newNgo);
+  db.users.push(coordinatorUser);
+
+  // Notify Admin
+  db.notifications.unshift({
+    id: `notif-reg-${Date.now()}`,
+    targetRole: 'admin',
+    title: 'New NGO Registration Pending Verification',
+    message: `${ngoName} (Darpan: ${darpanId}) submitted documents for platform accreditation.`,
+    timestamp: new Date().toISOString(),
+    read: false,
+    link: '/admin/verifications'
+  });
+
+  writeDB(db);
+
+  res.status(201).json({
+    success: true,
+    user: coordinatorUser,
+    ngo: newNgo,
+    token: `tok_ngo_${Date.now()}`,
+    message: 'NGO onboarding submitted! Application queued for Admin verification.'
+  });
+});
+
+/* ==========================================================================
    INCIDENTS API (Flagship Smart Emergency Incident System)
    ========================================================================== */
 

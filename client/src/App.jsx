@@ -21,6 +21,7 @@ import { VolunteeringPage } from './pages/VolunteeringPage';
 import { NgoDashboardPage } from './pages/NgoDashboardPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { UserProfilePage } from './pages/UserProfilePage';
+import { AuthPage } from './pages/AuthPage';
 
 import { HeartHandshake, ShieldCheck, Scale, Lock, QrCode } from 'lucide-react';
 
@@ -31,6 +32,8 @@ const MainLayout = () => {
     switch (activeTab) {
       case 'home':
         return <PublicHome />;
+      case 'auth':
+        return <AuthPage />;
       case 'incidents':
         return <IncidentTrackerPage />;
       case 'ngos':

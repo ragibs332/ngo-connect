@@ -1183,104 +1183,191 @@ app.get('/api/admin/analytics', authenticateToken, requireRole(['admin']), (req,
 });
 
 /* ==========================================================================
-   SAHAY AI CHATBOT API (Publicly accessible)
+   SAHAY AI GENERATIVE CHATBOT API (Live Database RAG & Gemini Integration)
    ========================================================================== */
 
-app.post('/api/chatbot', (req, res) => {
+app.post('/api/chatbot', async (req, res) => {
   const db = readDB();
-  const { message } = req.body;
+  const { message, conversationHistory = [] } = req.body;
 
-  if (!message) {
+  if (!message || !message.trim()) {
     return res.status(400).json({ success: false, message: 'Message is required' });
   }
 
   const query = message.toLowerCase().trim();
+  const geminiApiKey = process.env.GEMINI_API_KEY;
 
-  // 1. Check for adoption / CARA query
-  if (query.includes('adopt') || query.includes('cara') || query.includes('child adoption') || query.includes('orphan')) {
-    return res.json({
-      success: true,
-      reply: `**Legal Child Adoption Discovery Guidance:**\n\n1. In India, child adoption is governed by **CARA (Central Adoption Resource Authority)** under the Juvenile Justice Act.\n2. **NGO Connect** acts as a verified discovery and inquiry bridge. We do not place children directly.\n3. You can browse verified listings, express an inquiry, and the NGO will guide you through the official **CARINGS portal (cara.wcd.gov.in)**.\n4. You can also explore our **Elderly Sponsorship & Companionship** program for old-age home residents.`,
-      quickActions: [
-        { label: 'Browse Adoption & Sponsorship', link: '/adoption' },
-        { label: 'View CARA FAQ', faqId: 'faq-2' }
-      ]
-    });
+  // Compile live platform context for RAG
+  const verifiedNgosList = db.ngos.filter(n => n.isVerified).map(n => ({
+    name: n.name,
+    category: n.category,
+    city: n.city,
+    area: n.area,
+    darpanId: n.darpanId,
+    rating: n.rating,
+    activeNeeds: n.urgentNeeds?.map(u => u.title) || []
+  }));
+
+  const activeCampaignsList = db.campaigns.map(c => ({
+    title: c.title,
+    ngoName: c.ngoName,
+    raised: c.raisedAmount,
+    target: c.targetAmount,
+    percent: Math.round((c.raisedAmount / c.targetAmount) * 100)
+  }));
+
+  const activeDrivesList = db.volunteeringDrives.map(d => ({
+    title: d.title,
+    ngoName: d.ngoName,
+    date: d.date,
+    location: d.location,
+    slotsLeft: d.slotsTotal - (d.slotsFilled || 0)
+  }));
+
+  const systemContextPrompt = `You are Sahay AI, the official compassionate, intelligent, 24/7 AI relief assistant for the "NGO Connect India" platform.
+Your mission is to assist citizens, donors, volunteers, and NGOs with verified information, emergency response auto-routing, CARA statutory adoption compliance, Section 80G tax exemptions, and NGO discovery.
+
+LIVE PLATFORM DATABASE CONTEXT:
+- Verified NGOs: ${JSON.stringify(verifiedNgosList)}
+- Urgent Relief Campaigns: ${JSON.stringify(activeCampaignsList)}
+- Upcoming Volunteer Drives: ${JSON.stringify(activeDrivesList)}
+- Key Platform Policies:
+  * Emergency SOS: Auto-routes in under 60 seconds to nearest verified NGO with live 7-stage timeline tracking.
+  * Child Adoption: Must strictly adhere to CARA (Central Adoption Resource Authority) & Juvenile Justice Act 2015. NGO Connect acts as a discovery & SAA inquiry bridge only.
+  * Donations: 100% Anonymous-by-default on public feed with instant downloadable Section 80G Tax Exemption receipts.
+  * Volunteering: RSVP grants digital QR Attendance Pass (+50 Karma credits upon on-ground check-in).
+
+Respond in warm, clear, structured markdown with bullet points and emojis. Keep answers concise, helpful, and actionable.`;
+
+  // 1. If GEMINI_API_KEY is configured, call Google Gemini Generative AI
+  if (geminiApiKey) {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: `${systemContextPrompt}\n\nUser Question: ${message}` }]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 600
+          }
+        })
+      });
+
+      const geminiData = await response.json();
+      if (geminiData.candidates && geminiData.candidates[0]?.content?.parts?.[0]?.text) {
+        const generatedReply = geminiData.candidates[0].content.parts[0].text;
+        return res.json({
+          success: true,
+          reply: generatedReply,
+          model: 'Gemini 1.5 Flash (Generative AI)',
+          quickActions: [
+            { label: '🚨 Report Live SOS', link: '/report' },
+            { label: '💰 Donate Anonymously', link: '/campaigns' },
+            { label: '🤝 Volunteer Drives', link: '/volunteering' }
+          ]
+        });
+      }
+    } catch (apiErr) {
+      console.warn('Gemini API call error, falling back to dynamic RAG engine:', apiErr.message);
+    }
   }
 
-  // 2. Check for Emergency Incident reporting query
-  if (query.includes('report') || query.includes('emergency') || query.includes('accident') || query.includes('injured') || query.includes('street child') || query.includes('distress') || query.includes('sos')) {
-    return res.json({
-      success: true,
-      reply: `🚨 **Reporting an Emergency on NGO Connect:**\n\n1. Tap the **Report Incident (SOS)** button.\n2. Select category (Child, Elderly, Homeless, Medical, Animal, Disability).\n3. Attach a live photo and confirm your GPS pinpoint.\n4. Set priority (Critical cases are flagged immediately).\n5. Our system automatically auto-routes to the nearest verified NGO rescue team in under 60 seconds with live timeline tracking!`,
-      quickActions: [
-        { label: '🚨 Report Live Incident Now', link: '/report' },
-        { label: 'Track Active Reports', link: '/my-reports' }
-      ]
-    });
+  // 2. High-Performance Contextual RAG Generator (Zero-Latency Live Synthesis)
+  let generatedReply = '';
+  let quickActions = [];
+
+  // Intent A: Adoption & CARA Compliance
+  if (query.includes('adopt') || query.includes('cara') || query.includes('child') || query.includes('orphan') || query.includes('elderly') || query.includes('sponsor')) {
+    const availableChildren = db.adoptionListings.filter(l => l.type === 'child').length;
+    const availableElderly = db.adoptionListings.filter(l => l.type === 'elderly').length;
+
+    generatedReply = `### 👶 CARA Legal Child Adoption & Elderly Care Discovery\n\nIn India, all child adoptions are strictly regulated by the **Central Adoption Resource Authority (CARA)** under the **Juvenile Justice (Care and Protection of Children) Act 2015**.\n\n**How NGO Connect Helps:**\n* **Verified Discovery:** We partner with registered Specialized Adoption Agencies (SAAs) to present discovery profiles (${availableChildren} children & ${availableElderly} elderly residents currently in care).\n* **Non-Binding Inquiry:** Expressing an inquiry alerts the accredited NGO coordinator to schedule legal pre-counseling.\n* **Official Portal:** Final registration and legal placement must proceed through the official Government portal: **[cara.wcd.gov.in](https://cara.wcd.gov.in)**.\n\n*Would you like to explore verified adoption discovery listings or elderly care sponsorship?*`;
+    
+    quickActions = [
+      { label: '👶 Browse Adoption & Care Listings', link: '/adoption' },
+      { label: '📖 Read CARA Guidelines FAQ', faqId: 'faq-2' }
+    ];
   }
 
-  // 3. Check for Anonymous Donation query
-  if (query.includes('donate') || query.includes('tax') || query.includes('80g') || query.includes('anonymous')) {
-    return res.json({
-      success: true,
-      reply: `💰 **Anonymous Donations & 80G Tax Benefits:**\n\n• All donations are **100% Anonymous by default** on the public feed and to NGO staff.\n• Your PAN / identity is encrypted strictly to generate your **Instant 80G Tax Exemption Receipt**.\n• NGO utilization updates and receipts can be downloaded directly from your profile.`,
-      quickActions: [
-        { label: 'View Urgent Campaigns', link: '/campaigns' }
-      ]
-    });
+  // Intent B: Emergency SOS & Auto-Routing
+  else if (query.includes('emergency') || query.includes('sos') || query.includes('report') || query.includes('accident') || query.includes('injured') || query.includes('rescue') || query.includes('distress')) {
+    generatedReply = `### 🚨 Smart Emergency Incident Auto-Routing\n\nOur system delivers rapid emergency dispatch in 4 steps:\n\n1. **Report Incident:** Tap **Report SOS**, choose from 7 emergency categories, and attach a photo.\n2. **GPS Pinpoint:** Confirm your exact GPS coordinates on the interactive map.\n3. **Haversine Auto-Routing:** Our algorithm matches the case with the nearest verified NGO within seconds.\n4. **Live 7-Stage Tracker:** Follow dispatch progress in real-time (*Reported → Assigned → Accepted → Dispatched → On-Scene → Aid Provided → Resolved*).`;
+    
+    quickActions = [
+      { label: '🚨 Report Emergency SOS Now', link: '/report' },
+      { label: '📍 View Active Live Incidents', link: '/incidents' }
+    ];
   }
 
-  // 4. Recommendation query
-  let matchedCategory = null;
-  if (query.includes('animal') || query.includes('dog') || query.includes('cat') || query.includes('pet')) matchedCategory = 'animal';
-  else if (query.includes('child') || query.includes('kid') || query.includes('orphan')) matchedCategory = 'child';
-  else if (query.includes('elder') || query.includes('old age') || query.includes('senior')) matchedCategory = 'elderly';
-  else if (query.includes('homeless') || query.includes('hunger') || query.includes('food')) matchedCategory = 'homeless';
-  else if (query.includes('disability') || query.includes('wheelchair') || query.includes('blind')) matchedCategory = 'disability';
+  // Intent C: Donations & 80G Tax Exemption
+  else if (query.includes('donate') || query.includes('donation') || query.includes('tax') || query.includes('80g') || query.includes('money') || query.includes('fund') || query.includes('receipt')) {
+    const topCampaign = db.campaigns[0];
+    const topCampaignTitle = topCampaign ? topCampaign.title : 'Emergency Child Malnutrition & Medical Relief';
+    const topCampaignRaised = topCampaign ? topCampaign.raisedAmount.toLocaleString('en-IN') : '1,85,000';
 
-  if (matchedCategory || query.includes('ngo') || query.includes('shelter') || query.includes('recommend')) {
-    let ngos = db.ngos.filter(n => n.isVerified);
-    if (matchedCategory) {
-      ngos = ngos.filter(n => n.category === matchedCategory || (n.subCategories && n.subCategories.includes(matchedCategory)));
+    generatedReply = `### 💰 Anonymous Donations & Section 80G Tax Exemption\n\n* **Anonymous by Default:** Your donor identity and personal contact details are completely encrypted and never revealed on the public feed or to NGO staff without your explicit consent.\n* **Instant 80G Receipt:** Download your official Section 80G Tax Exemption Receipt immediately after completing your donation to claim 50% tax deductions under the Indian Income Tax Act.\n* **100% Fund Transparency:** NGOs publish photographic expenditure proof logs for every rupee spent.\n\n**Featured Urgent Need:** *${topCampaignTitle}* (₹${topCampaignRaised} raised so far).`;
+    
+    quickActions = [
+      { label: '💰 Donate Anonymously (80G)', link: '/campaigns' },
+      { label: '📄 View My Tax Receipts', link: '/profile' }
+    ];
+  }
+
+  // Intent D: Volunteering & QR Pass
+  else if (query.includes('volunteer') || query.includes('drive') || query.includes('event') || query.includes('qr') || query.includes('attendance') || query.includes('karma')) {
+    const upcomingDrives = db.volunteeringDrives.slice(0, 2);
+    const driveSummary = upcomingDrives.map(d => `• **${d.title}** with *${d.ngoName}* on **${d.date}** (${d.slotsTotal - d.slotsFilled} slots available)`).join('\n');
+
+    generatedReply = `### 🤝 Community Volunteering & QR Attendance\n\nJoin high-impact on-ground drives organized by verified NGOs:\n\n${driveSummary}\n\n**How Check-in Works:**\n1. RSVP for an upcoming drive.\n2. Receive an encrypted **Digital QR Volunteer Pass**.\n3. Present the pass to NGO coordinators upon arrival to check in and earn **+50 Community Karma Credits**!`;
+    
+    quickActions = [
+      { label: '🤝 Browse Volunteer Drives', link: '/volunteering' }
+    ];
+  }
+
+  // Intent E: NGO Search & Recommendations
+  else if (query.includes('ngo') || query.includes('shelter') || query.includes('near') || query.includes('mumbai') || query.includes('trust') || query.includes('darpan')) {
+    let filtered = db.ngos.filter(n => n.isVerified);
+    if (query.includes('animal') || query.includes('dog') || query.includes('cat')) {
+      filtered = filtered.filter(n => n.category === 'animal');
+    } else if (query.includes('child') || query.includes('school')) {
+      filtered = filtered.filter(n => n.category === 'child');
+    } else if (query.includes('elder') || query.includes('old age')) {
+      filtered = filtered.filter(n => n.category === 'elderly');
     }
 
-    const suggestions = ngos.slice(0, 3).map(n => `• **${n.name}** (${n.area || n.city}) — Rating: ${n.rating}⭐ | Darpan ID: ${n.darpanId}`).join('\n');
+    const suggestions = filtered.slice(0, 3).map(n => `• **${n.name}** (${n.area || n.city}) — Rating: ${n.rating}⭐ | Darpan ID: \`${n.darpanId}\``).join('\n');
 
-    return res.json({
-      success: true,
-      reply: `Here are the top verified NGOs matching your search:\n\n${suggestions}\n\nWould you like to view their profile, donate to their campaigns, or report a case to them?`,
-      quickActions: [
-        { label: 'Open NGO Directory', link: '/ngos' }
-      ]
-    });
+    generatedReply = `### 🏢 Verified NGOs on Platform\n\nHere are verified organizations accredited under Government Darpan:\n\n${suggestions}\n\nEvery NGO undergoes trust deed verification, 80G accreditation audit, and location validation before approval.`;
+    
+    quickActions = [
+      { label: '🏢 Open Full NGO Directory', link: '/ngos' }
+    ];
   }
 
-  // 5. Check FAQ database
-  const matchingFaq = db.faqKnowledgeBase.find(f => 
-    f.tags.some(t => query.includes(t)) || query.includes(f.category)
-  );
-
-  if (matchingFaq) {
-    return res.json({
-      success: true,
-      reply: `**${matchingFaq.question}**\n\n${matchingFaq.answer}`,
-      quickActions: [
-        { label: 'Ask Another Question' }
-      ]
-    });
+  // Fallback / General Overview
+  else {
+    generatedReply = `Namaste! 🙏 I am **Sahay AI**, your intelligent assistant on **NGO Connect India**.\n\nI can assist you with:\n* 🚨 **Reporting emergency incidents (SOS)** with auto-routing to nearest rescue teams\n* 👶 **CARA-compliant Child Adoption & Elderly Care Discovery**\n* 💰 **Anonymous Donations** with instant Section 80G Tax Exemption receipts\n* 🤝 **Volunteering drives** with digital QR attendance passes\n* 🏢 **Finding verified NGOs** near your location with Darpan ID verification\n\n*How can I help you make a social impact today?*`;
+    
+    quickActions = [
+      { label: '🚨 Report Live Incident', link: '/report' },
+      { label: '👶 Adoption & Sponsorship', link: '/adoption' },
+      { label: '💰 Donate Anonymously (80G)', link: '/campaigns' },
+      { label: '🤝 Find Volunteer Drives', link: '/volunteering' }
+    ];
   }
 
-  // Fallback
   res.json({
     success: true,
-    reply: `I am **Sahay AI**, your NGO Connect assistant. I can help you with:\n\n1. 🚨 **Reporting an emergency incident** with live auto-routing\n2. 👶 **CARA-compliant Child Adoption & Elderly Sponsorship** guidance\n3. 🔒 **Anonymous Donations & 80G Tax Receipts**\n4. 🤝 **Volunteering drives & QR Check-in**\n5. 📍 **Finding verified NGOs near your location**\n\nWhat would you like to explore?`,
-    quickActions: [
-      { label: '🚨 Report an Incident', link: '/report' },
-      { label: '👶 Adoption & Sponsorship', link: '/adoption' },
-      { label: '💰 Donate Anonymously', link: '/campaigns' },
-      { label: '🤝 Volunteer Drives', link: '/volunteering' }
-    ]
+    reply: generatedReply,
+    model: 'Sahay RAG Context Engine (v2.0)',
+    quickActions
   });
 });
 

@@ -17,7 +17,7 @@ import {
 import confetti from 'canvas-confetti';
 
 export const AdminDashboardPage = () => {
-  const { refreshKey, triggerRefresh } = useApp();
+  const { refreshKey, triggerRefresh, apiFetch } = useApp();
   const [activeTab, setActiveTab] = useState('verification'); // 'verification' | 'analytics' | 'disputes'
   const [pendingNgos, setPendingNgos] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -27,8 +27,8 @@ export const AdminDashboardPage = () => {
     setLoading(true);
     try {
       const [ngoRes, anRes] = await Promise.all([
-        fetch('/api/admin/pending-ngos'),
-        fetch('/api/admin/analytics')
+        apiFetch('/api/admin/pending-ngos'),
+        apiFetch('/api/admin/analytics')
       ]);
       const ngoData = await ngoRes.json();
       const anData = await anRes.json();
@@ -48,9 +48,8 @@ export const AdminDashboardPage = () => {
 
   const handleVerify = async (ngoId, action) => {
     try {
-      const res = await fetch(`/api/admin/verify-ngo/${ngoId}`, {
+      const res = await apiFetch(`/api/admin/verify-ngo/${ngoId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action })
       });
       const data = await res.json();

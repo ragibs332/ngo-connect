@@ -23,20 +23,21 @@ export const DonationModal = () => {
     setSelectedCampaignForDonation,
     currentUser,
     setActiveReceiptData,
-    triggerRefresh
+    triggerRefresh,
+    apiFetch
   } = useApp();
 
-  const [amount, setAmount] = useState(2500);
   const [customAmount, setCustomAmount] = useState('');
-  const [isAnonymousPublic, setIsAnonymousPublic] = useState(true);
+  const [selectedAmount, setSelectedAmount] = useState(1000);
   const [showDonorName, setShowDonorName] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('UPI (Google Pay / PhonePe)');
+  const [paymentMethod, setPaymentMethod] = useState('UPI (Simulation)');
+  const [panNumber, setPanNumber] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!selectedCampaignForDonation) return null;
-  const campaign = selectedCampaignForDonation;
 
-  const finalAmount = customAmount ? Number(customAmount) : amount;
+  const campaign = selectedCampaignForDonation;
+  const finalAmount = customAmount ? Number(customAmount) : selectedAmount;
 
   const handleDonate = async (e) => {
     e.preventDefault();
@@ -48,16 +49,11 @@ export const DonationModal = () => {
     setIsProcessing(true);
 
     try {
-      const res = await fetch('/api/donations', {
+      const res = await apiFetch('/api/donations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           campaignId: campaign.id,
           ngoId: campaign.ngoId,
-          userId: currentUser.id,
-          donorName: currentUser.name,
-          donorEmail: currentUser.email,
-          donorPhone: currentUser.phone,
           amount: finalAmount,
           isAnonymousPublic: !showDonorName,
           showDonorName,

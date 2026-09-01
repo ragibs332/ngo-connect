@@ -14,7 +14,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 
 export const VolunteeringPage = () => {
-  const { setSelectedDriveForRSVP, currentUser, refreshKey } = useApp();
+  const { setSelectedDriveForRSVP, refreshKey, requireAuth, currentUser } = useApp();
   const [drives, setDrives] = useState([]);
   const [myRegs, setMyRegs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -176,7 +176,7 @@ export const VolunteeringPage = () => {
                 </div>
 
                 <button
-                  onClick={() => setSelectedDriveForRSVP(drive)}
+                  onClick={() => requireAuth(() => setSelectedDriveForRSVP(drive), 'Please log in or create an account to join volunteer drives.')}
                   className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs"
                 >
                   <QrCode className="w-4 h-4" />

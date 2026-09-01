@@ -19,11 +19,12 @@ export const AdoptionModal = () => {
     selectedAdoptionForInquiry,
     setSelectedAdoptionForInquiry,
     currentUser,
-    triggerRefresh
+    triggerRefresh,
+    apiFetch
   } = useApp();
 
   const [message, setMessage] = useState('');
-  const [inquiryType, setInquiryType] = useState('counseling');
+  const [inquiryType, setInquiryType] = useState('visit');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!selectedAdoptionForInquiry) return null;
@@ -35,15 +36,10 @@ export const AdoptionModal = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/adoption-inquiries', {
+      const res = await apiFetch('/api/adoption-inquiries', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           listingId: item.id,
-          userId: currentUser.id,
-          userName: currentUser.name,
-          userPhone: currentUser.phone,
-          userEmail: currentUser.email,
           inquiryType: isChild
             ? 'CARA Pre-Counseling & Official Discovery'
             : (inquiryType === 'visit' ? 'Weekend Companion Visit' : 'Monthly Healthcare Sponsorship'),

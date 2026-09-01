@@ -4,8 +4,8 @@ import { X, QrCode, CheckCircle2, AlertCircle, Sparkles, ScanLine } from 'lucide
 import confetti from 'canvas-confetti';
 
 export const QRScannerModal = () => {
-  const { isQRScannerOpen, setIsQRScannerOpen, triggerRefresh } = useApp();
-  const [tokenInput, setTokenInput] = useState('PASS_ROHAN_VERSOVA_VOL1');
+  const { isQRScannerOpen, setIsQRScannerOpen, triggerRefresh, apiFetch } = useApp();
+  const [tokenInput, setTokenInput] = useState('');
   const [result, setResult] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -19,9 +19,8 @@ export const QRScannerModal = () => {
     setResult(null);
 
     try {
-      const res = await fetch('/api/volunteering/checkin', {
+      const res = await apiFetch('/api/volunteering/checkin', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ qrPassToken: token })
       });
       const data = await res.json();

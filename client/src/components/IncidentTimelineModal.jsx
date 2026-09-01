@@ -32,7 +32,8 @@ export const IncidentTimelineModal = () => {
     selectedIncidentForTimeline,
     setSelectedIncidentForTimeline,
     currentRole,
-    triggerRefresh
+    triggerRefresh,
+    apiFetch
   } = useApp();
 
   const [statusNote, setStatusNote] = useState('');
@@ -49,9 +50,8 @@ export const IncidentTimelineModal = () => {
   const handleAdvanceStatus = async (targetStatus) => {
     setIsUpdating(true);
     try {
-      const res = await fetch(`/api/incidents/${incident.id}/status`, {
+      const res = await apiFetch(`/api/incidents/${incident.id}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status: targetStatus,
           note: statusNote || undefined,

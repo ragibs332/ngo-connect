@@ -9,7 +9,8 @@ export const VolunteerModal = () => {
     selectedDriveForRSVP,
     setSelectedDriveForRSVP,
     currentUser,
-    triggerRefresh
+    triggerRefresh,
+    apiFetch
   } = useApp();
 
   const [confirmedPass, setConfirmedPass] = useState(null);
@@ -23,15 +24,10 @@ export const VolunteerModal = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/volunteering/register', {
+      const res = await apiFetch('/api/volunteering/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          driveId: drive.id,
-          userId: currentUser.id,
-          userName: currentUser.name,
-          userPhone: currentUser.phone,
-          userEmail: currentUser.email
+          driveId: drive.id
         })
       });
       const data = await res.json();

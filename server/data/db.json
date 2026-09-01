@@ -2,9 +2,11 @@
   "users": [
     {
       "id": "user-rohan",
+      "username": "rohan_s",
       "name": "Rohan Sharma",
       "email": "rohan.sharma@example.com",
       "phone": "+91 98765 43210",
+      "password": "$2a$10$gnn4iXkJpUlXToQVnEN/zuuFfJwmJQ4SXeCHthh9bYvTQ3XOpqX3a",
       "role": "public",
       "city": "Mumbai",
       "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
@@ -17,19 +19,24 @@
     },
     {
       "id": "ngo-hope",
+      "username": "hope_coordinator",
       "name": "Priya Deshmukh (Coordinator)",
       "email": "contact@hopehorizon.org",
       "phone": "+91 98200 11223",
+      "password": "$2a$10$TeAVpKs59OmgQJaWZa8Heuszh9ZwvEpb4f5vfdTJhVmjPVorxcE/6",
       "role": "ngo",
       "ngoId": "ngo-1",
+      "ngoName": "Hope Horizon Child Care & Shelter",
       "city": "Mumbai",
       "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80"
     },
     {
       "id": "admin-root",
+      "username": "admin",
       "name": "Ananya Roy (Platform Admin)",
       "email": "admin@ngoconnect.org",
       "phone": "+91 91100 99887",
+      "password": "$2a$10$4F6PVg1NUOSDremIj7ShNe6vZqKZNioI.3ecfqGwHbi7DN20po9gq",
       "role": "admin",
       "city": "Pan India",
       "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80"

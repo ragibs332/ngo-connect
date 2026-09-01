@@ -21,7 +21,8 @@ export const UserProfilePage = () => {
     currentUser,
     setSelectedIncidentForTimeline,
     setActiveReceiptData,
-    refreshKey
+    refreshKey,
+    apiFetch
   } = useApp();
 
   const [myIncidents, setMyIncidents] = useState([]);
@@ -30,17 +31,19 @@ export const UserProfilePage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!currentUser) return;
     setLoading(true);
     Promise.all([
-      fetch(`/api/incidents?reporterId=${currentUser.id}`).then(r => r.json()),
-      fetch(`/api/donations?userId=${currentUser.id}`).then(r => r.json()),
-      fetch(`/api/volunteering/my-registrations/${currentUser.id}`).then(r => r.json())
+      apiFetch(`/api/incidents?reporterId=${currentUser.id}`).then(r => r.json()),
+      apiFetch(`/api/donations?userId=${currentUser.id}`).then(r => r.json()),
+      apiFetch('/api/volunteering/my-registrations').then(r => r.json())
     ])
       .then(([incData, donData, volData]) => {
         if (incData.success) setMyIncidents(incData.data);
         if (donData.success) setMyDonations(donData.data);
         if (volData.success) setMyVolunteerRegs(volData.data);
       })
+      .catch(err => console.error('Profile fetch error:', err))
       .finally(() => setLoading(false));
   }, [refreshKey, currentUser]);
 

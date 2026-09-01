@@ -24,7 +24,8 @@ export const PublicHome = () => {
     setActiveTab,
     setSelectedIncidentForTimeline,
     setSelectedCampaignForDonation,
-    setSelectedAdoptionForInquiry
+    setSelectedAdoptionForInquiry,
+    requireAuth
   } = useApp();
 
   const [incidents, setIncidents] = useState([]);
@@ -304,7 +305,7 @@ export const PublicHome = () => {
                     </div>
 
                     <button
-                      onClick={() => setSelectedCampaignForDonation(camp)}
+                      onClick={() => requireAuth(() => setSelectedCampaignForDonation(camp), 'Please log in or create an account to donate.')}
                       className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold py-2.5 rounded-xl shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5"
                     >
                       <Gift className="w-3.5 h-3.5" />

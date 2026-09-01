@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 export const CampaignsPage = () => {
-  const { setSelectedCampaignForDonation, refreshKey } = useApp();
+  const { setSelectedCampaignForDonation, requireAuth, refreshKey } = useApp();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'child' | 'animal' | 'elderly'
@@ -136,10 +136,10 @@ export const CampaignsPage = () => {
                     )}
 
                     <button
-                      onClick={() => setSelectedCampaignForDonation(camp)}
+                      onClick={() => requireAuth(() => setSelectedCampaignForDonation(camp), 'Please log in or create an account to donate.')}
                       className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold py-2.5 rounded-xl shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
                     >
-                      <Gift className="w-4 h-4" />
+                      <Gift className="w-3.5 h-3.5" />
                       <span>Donate Anonymously (80G Tax Receipt)</span>
                     </button>
                   </div>

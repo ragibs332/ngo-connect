@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export const AdoptionPage = () => {
-  const { setSelectedAdoptionForInquiry, currentUser, refreshKey } = useApp();
+  const { setSelectedAdoptionForInquiry, currentUser, refreshKey, requireAuth } = useApp();
   const [tab, setTab] = useState('child'); // 'child' | 'elderly' | 'my-inquiries'
   const [listings, setListings] = useState([]);
   const [myInquiries, setMyInquiries] = useState([]);
@@ -207,7 +207,7 @@ export const AdoptionPage = () => {
                   </div>
 
                   <button
-                    onClick={() => setSelectedAdoptionForInquiry(item)}
+                    onClick={() => requireAuth(() => setSelectedAdoptionForInquiry(item), 'Please log in or create an account to submit an inquiry.')}
                     className={`text-xs font-extrabold px-5 py-2.5 rounded-xl text-white transition-all shadow-md flex items-center gap-1.5 ${
                       item.type === 'child'
                         ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20'

@@ -27,7 +27,8 @@ export const NgoDashboardPage = () => {
     setSelectedIncidentForTimeline,
     setIsQRScannerOpen,
     refreshKey,
-    triggerRefresh
+    triggerRefresh,
+    apiFetch
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('incidents'); // 'incidents' | 'post-need' | 'post-adoption' | 'inquiries' | 'donations'
@@ -51,18 +52,19 @@ export const NgoDashboardPage = () => {
   const fetchNgoData = async () => {
     setLoading(true);
     try {
-      // Fetch incidents assigned to this NGO or nearby
-      const incRes = await fetch(`/api/incidents?ngoId=${currentUser.ngoId || 'ngo-1'}`);
+      const activeNgoId = currentUser?.ngoId || 'ngo-1';
+      // Fetch incidents assigned to this NGO
+      const incRes = await apiFetch(`/api/incidents?ngoId=${activeNgoId}`);
       const incData = await incRes.json();
       if (incData.success) setIncidents(incData.data);
 
       // Fetch inquiries
-      const inqRes = await fetch(`/api/adoption-inquiries?ngoId=${currentUser.ngoId || 'ngo-1'}`);
+      const inqRes = await apiFetch(`/api/adoption-inquiries?ngoId=${activeNgoId}`);
       const inqData = await inqRes.json();
       if (inqData.success) setInquiries(inqData.data);
 
       // Fetch donations (anonymized view)
-      const donRes = await fetch(`/api/donations?ngoId=${currentUser.ngoId || 'ngo-1'}`);
+      const donRes = await apiFetch(`/api/donations?ngoId=${activeNgoId}`);
       const donData = await donRes.json();
       if (donData.success) setDonations(donData.data);
     } catch (err) {
@@ -79,9 +81,9 @@ export const NgoDashboardPage = () => {
   const handlePostNeed = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`/api/ngos/${currentUser.ngoId || 'ngo-1'}/needs`, {
+      const activeNgoId = currentUser?.ngoId || 'ngo-1';
+      const res = await apiFetch(`/api/ngos/${activeNgoId}/needs`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: needTitle,
           fundsNeeded: needFunds ? Number(needFunds) : undefined,
@@ -105,11 +107,10 @@ export const NgoDashboardPage = () => {
   const handlePostAdoption = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/adoption-listings', {
+      const res = await apiFetch('/api/adoption-listings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ngoId: currentUser.ngoId || 'ngo-1',
+          ngoId: currentUser?.ngoId || 'ngo-1',
           type: adoptType,
           name: adoptName,
           age: adoptAge,
@@ -135,9 +136,8 @@ export const NgoDashboardPage = () => {
 
   const handleApproveInquiry = async (inqId, newStatus) => {
     try {
-      await fetch(`/api/adoption-inquiries/${inqId}`, {
+      await apiFetch(`/api/adoption-inquiries/${inqId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status: newStatus,
           ngoNote: newStatus === 'approved' ? 'Inquiry accepted. Briefing meeting scheduled.' : 'Inquiry closed.'
@@ -145,7 +145,7 @@ export const NgoDashboardPage = () => {
       });
       triggerRefresh();
     } catch (err) {
-      console.error(err);
+      console.error('Error updating inquiry:', err);
     }
   };
 

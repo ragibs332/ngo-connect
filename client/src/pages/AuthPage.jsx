@@ -1,440 +1,463 @@
 import React, { useState } from 'react';
-import { useApp, ROLES, MOCK_USERS } from '../context/AppContext';
+import { useApp, ROLES } from '../context/AppContext';
 import {
   User,
   Building2,
   ShieldCheck,
-  Phone,
   Mail,
-  Lock,
-  Sparkles,
+  KeyRound,
   ArrowRight,
+  Sparkles,
+  AlertCircle,
+  Phone,
   CheckCircle2,
-  FileCheck,
-  Send,
   HeartHandshake,
-  KeyRound
+  Lock
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const AuthPage = () => {
-  const { switchRole, setActiveTab, currentUser } = useApp();
-  const [authRole, setAuthRole] = useState(ROLES.PUBLIC); // 'public' | 'ngo' | 'admin'
-  const [isNgoRegister, setIsNgoRegister] = useState(false);
+  const { login, register, setActiveTab, currentUser, logout } = useApp();
+  const [activeTab, setActiveTabLocal] = useState('login'); // 'login' | 'register' | 'ngo'
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Citizen Login State
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [simulatedOtp, setSimulatedOtp] = useState('');
-  const [citizenName, setCitizenName] = useState('');
+  // Login form state
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
 
-  // NGO Login State
-  const [ngoEmail, setNgoEmail] = useState('');
-  const [ngoPassword, setNgoPassword] = useState('');
-
-  // NGO Registration State
-  const [regNgoName, setRegNgoName] = useState('');
-  const [regCoordinator, setRegCoordinator] = useState('');
+  // Register form state
+  const [regName, setRegName] = useState('');
+  const [regUsername, setRegUsername] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regDarpan, setRegDarpan] = useState('');
-  const [regCategory, setRegCategory] = useState('child');
-  const [regCity, setRegCity] = useState('Mumbai');
-  const [regDescription, setRegDescription] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
 
-  // Admin Login State
-  const [adminKey, setAdminKey] = useState('');
+  // NGO Onboarding form state
+  const [ngoName, setNgoName] = useState('');
+  const [ngoDarpan, setNgoDarpan] = useState('');
+  const [ngoCoordinator, setNgoCoordinator] = useState('');
+  const [ngoEmail, setNgoEmail] = useState('');
+  const [ngoPassword, setNgoPassword] = useState('');
+  const [ngoCategory, setNgoCategory] = useState('child');
 
-  const [loading, setLoading] = useState(false);
-
-  // Send OTP
-  const handleSendOtp = async (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    if (!phone) return alert('Please enter your mobile number.');
-    setLoading(true);
+    setErrorMessage('');
+    setIsLoading(true);
 
-    try {
-      const res = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setOtpSent(true);
-        setSimulatedOtp(data.simulatedOtp);
-        setOtp(data.simulatedOtp); // Auto-fill for convenience
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+    const res = await login(loginIdentifier, loginPassword);
+    setIsLoading(false);
+    if (res.success) {
+      confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+    } else {
+      setErrorMessage(res.message);
     }
   };
 
-  // Verify Citizen Login
-  const handleCitizenLogin = async (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'public', identifier: phone, otp })
-      });
-      const data = await res.json();
-      if (data.success) {
-        confetti({ particleCount: 70, spread: 60 });
-        switchRole(ROLES.PUBLIC);
-        setActiveTab('home');
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+    setErrorMessage('');
+
+    if (regPassword !== regConfirmPassword) {
+      setErrorMessage('Passwords do not match.');
+      return;
+    }
+
+    if (regPassword.length < 6) {
+      setErrorMessage('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setIsLoading(true);
+    const res = await register({
+      name: regName,
+      username: regUsername,
+      email: regEmail,
+      phone: regPhone,
+      password: regPassword,
+      confirmPassword: regConfirmPassword
+    });
+    setIsLoading(false);
+    if (res.success) {
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    } else {
+      setErrorMessage(res.message);
     }
   };
 
-  // NGO Login
-  const handleNgoLogin = async (e) => {
+  const handleNgoRegisterSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'ngo', identifier: ngoEmail, password: ngoPassword })
-      });
-      const data = await res.json();
-      if (data.success) {
-        confetti({ particleCount: 70, spread: 60 });
-        switchRole(ROLES.NGO);
-        setActiveTab('ngo-dashboard');
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setErrorMessage('');
+    setIsLoading(true);
 
-  // NGO Onboarding Registration
-  const handleNgoRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
     try {
       const res = await fetch('/api/auth/register-ngo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ngoName: regNgoName,
-          coordinatorName: regCoordinator,
-          email: regEmail,
-          phone: regPhone,
-          darpanId: regDarpan,
-          category: regCategory,
-          city: regCity,
-          description: regDescription
+          ngoName,
+          darpanId: ngoDarpan,
+          coordinatorName: ngoCoordinator,
+          email: ngoEmail,
+          password: ngoPassword,
+          category: ngoCategory
         })
       });
       const data = await res.json();
+      setIsLoading(false);
+
       if (data.success) {
         confetti({ particleCount: 80, spread: 70 });
         alert(data.message);
-        switchRole(ROLES.NGO);
-        setActiveTab('ngo-dashboard');
+        setActiveTab('home');
+      } else {
+        setErrorMessage(data.message || 'NGO registration failed.');
       }
     } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      setIsLoading(false);
+      setErrorMessage('Network connection error.');
     }
   };
 
-  // Admin Login
-  const handleAdminLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'admin', password: adminKey })
-      });
-      const data = await res.json();
-      if (data.success) {
-        confetti({ particleCount: 80, spread: 70 });
-        switchRole(ROLES.ADMIN);
-        setActiveTab('admin-dashboard');
-      } else {
-        alert(data.message || 'Invalid passcode');
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const handleQuickLogin = async (role) => {
+    setErrorMessage('');
+    setIsLoading(true);
+    let email = 'rohan.sharma@example.com';
+    let pass = 'Password@123';
+
+    if (role === 'ngo') {
+      email = 'contact@hopehorizon.org';
+      pass = 'Password@123';
+    } else if (role === 'admin') {
+      email = 'admin@ngoconnect.org';
+      pass = 'Admin@SecurePass2026!';
+    }
+
+    const res = await login(email, pass);
+    setIsLoading(false);
+    if (res.success) {
+      confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+    } else {
+      setErrorMessage(res.message);
     }
   };
+
+  // If already logged in, show user profile overview & logout option
+  if (currentUser) {
+    return (
+      <div className="max-w-xl mx-auto py-12 px-4">
+        <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center space-y-6 shadow-xl">
+          <img
+            src={currentUser.avatar}
+            alt={currentUser.name}
+            className="w-20 h-20 rounded-full object-cover mx-auto ring-4 ring-emerald-500/30 shadow-md"
+          />
+
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase">
+              Active Session • {currentUser.role}
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-900">{currentUser.name}</h2>
+            <p className="text-xs text-slate-500">{currentUser.email} • {currentUser.phone}</p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              onClick={() => setActiveTab(currentUser.role === 'admin' ? 'admin-dashboard' : currentUser.role === 'ngo' ? 'ngo-dashboard' : 'profile')}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl shadow-md transition-all"
+            >
+              Open Dashboard
+            </button>
+            <button
+              onClick={logout}
+              className="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold py-3 rounded-xl transition-all border border-rose-200"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto py-6 pb-16 space-y-8">
-      {/* Header */}
+    <div className="max-w-xl mx-auto py-8 px-4 space-y-6">
+      {/* Branding */}
       <div className="text-center space-y-2">
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white mx-auto shadow-lg shadow-emerald-500/20">
           <HeartHandshake className="w-7 h-7" />
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-          NGO Connect Portal Login
-        </h1>
-        <p className="text-xs text-slate-500 max-w-md mx-auto">
-          Secure multi-role access for Citizens, Verified NGO Coordinators, and Platform Governance.
+        <h1 className="text-2xl font-black tracking-tight text-slate-900">NGO Connect</h1>
+        <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium">
+          Connecting People, NGOs and Communities for Verified Social Impact.
         </p>
       </div>
 
-      {/* Role Selection Tabs */}
-      <div className="grid grid-cols-3 gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-xs max-w-2xl mx-auto">
-        <button
-          onClick={() => {
-            setAuthRole(ROLES.PUBLIC);
-            setIsNgoRegister(false);
-          }}
-          className={`py-3 px-2 rounded-xl text-xs font-extrabold transition-all flex flex-col items-center gap-1.5 ${
-            authRole === ROLES.PUBLIC
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'text-slate-600 hover:bg-slate-50'
-          }`}
-        >
-          <User className="w-4 h-4" />
-          <span>Citizen User</span>
-        </button>
-
-        <button
-          onClick={() => setAuthRole(ROLES.NGO)}
-          className={`py-3 px-2 rounded-xl text-xs font-extrabold transition-all flex flex-col items-center gap-1.5 ${
-            authRole === ROLES.NGO
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-slate-600 hover:bg-slate-50'
-          }`}
-        >
-          <Building2 className="w-4 h-4" />
-          <span>NGO Staff</span>
-        </button>
-
-        <button
-          onClick={() => {
-            setAuthRole(ROLES.ADMIN);
-            setIsNgoRegister(false);
-          }}
-          className={`py-3 px-2 rounded-xl text-xs font-extrabold transition-all flex flex-col items-center gap-1.5 ${
-            authRole === ROLES.ADMIN
-              ? 'bg-purple-600 text-white shadow-md'
-              : 'text-slate-600 hover:bg-slate-50'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4" />
-          <span>Platform Admin</span>
-        </button>
-      </div>
-
-      {/* 1. PUBLIC CITIZEN LOGIN & OTP */}
-      {authRole === ROLES.PUBLIC && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-lg mx-auto shadow-md space-y-6 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <h2 className="text-base font-extrabold text-slate-900">Citizen Mobile OTP Sign-In</h2>
-              <p className="text-xs text-slate-500">Report emergencies, donate anonymously & volunteer</p>
-            </div>
-            <span className="text-2xl">👤</span>
-          </div>
-
-          {/* Quick Demo 1-Click Button */}
+      {/* Auth Card */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+        {/* Tabs */}
+        <div className="flex border-b border-slate-200 bg-slate-50 text-xs font-extrabold">
           <button
-            type="button"
             onClick={() => {
-              switchRole(ROLES.PUBLIC);
-              setActiveTab('home');
+              setActiveTabLocal('login');
+              setErrorMessage('');
             }}
-            className="w-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 p-3 rounded-2xl flex items-center justify-between text-xs font-bold transition-all group"
+            className={`flex-1 py-3.5 text-center border-b-2 transition-all ${
+              activeTab === 'login'
+                ? 'border-emerald-600 text-emerald-700 bg-white'
+                : 'border-transparent text-slate-600 hover:text-slate-900'
+            }`}
           >
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-600" />
-              <span>1-Click Demo Login as <strong>Rohan Sharma (Citizen)</strong></span>
-            </div>
-            <ArrowRight className="w-4 h-4 text-emerald-700 group-hover:translate-x-0.5 transition-transform" />
+            Log In
           </button>
+          <button
+            onClick={() => {
+              setActiveTabLocal('register');
+              setErrorMessage('');
+            }}
+            className={`flex-1 py-3.5 text-center border-b-2 transition-all ${
+              activeTab === 'register'
+                ? 'border-emerald-600 text-emerald-700 bg-white'
+                : 'border-transparent text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Create Account
+          </button>
+          <button
+            onClick={() => {
+              setActiveTabLocal('ngo');
+              setErrorMessage('');
+            }}
+            className={`flex-1 py-3.5 text-center border-b-2 transition-all ${
+              activeTab === 'ngo'
+                ? 'border-blue-600 text-blue-700 bg-white'
+                : 'border-transparent text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            NGO Onboarding
+          </button>
+        </div>
 
-          <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-slate-200"></div>
-            <span className="shrink-0 mx-4 text-slate-400 text-[11px] uppercase font-bold">Or Sign In with Phone</span>
-            <div className="flex-grow border-t border-slate-200"></div>
+        {/* Content */}
+        <div className="p-6 sm:p-8 space-y-5">
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 text-red-900 text-xs p-3 rounded-xl flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Quick Demo Sign-in for Evaluator convenience */}
+          <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-2">
+            <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">
+              ⚡ 1-Click Quick Demo Sign-In:
+            </span>
+            <div className="grid grid-cols-3 gap-1.5 text-[11px]">
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() => handleQuickLogin('public')}
+                className="bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 py-1.5 px-2 rounded-lg font-bold text-slate-800 hover:text-emerald-700 text-center transition-all truncate"
+              >
+                👤 Citizen
+              </button>
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() => handleQuickLogin('ngo')}
+                className="bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 py-1.5 px-2 rounded-lg font-bold text-slate-800 hover:text-blue-700 text-center transition-all truncate"
+              >
+                🏢 NGO Staff
+              </button>
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() => handleQuickLogin('admin')}
+                className="bg-white hover:bg-purple-50 border border-slate-200 hover:border-purple-300 py-1.5 px-2 rounded-lg font-bold text-slate-800 hover:text-purple-700 text-center transition-all truncate"
+              >
+                🛡️ Admin
+              </button>
+            </div>
           </div>
 
-          {/* Phone Form */}
-          {!otpSent ? (
-            <form onSubmit={handleSendOtp} className="space-y-4">
+          {/* TAB 1: LOGIN */}
+          {activeTab === 'login' && (
+            <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
-                  Enter Mobile Number
+                <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
+                  Username or Email Address <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-500">+91</span>
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   <input
-                    type="tel"
+                    type="text"
                     required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="98765 43210"
-                    className="w-full text-xs pl-12 pr-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-hidden font-medium"
+                    value={loginIdentifier}
+                    onChange={(e) => setLoginIdentifier(e.target.value)}
+                    placeholder="name@example.com or username"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-hidden font-medium"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-hidden font-medium"
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
               >
-                <Send className="w-3.5 h-3.5" />
-                <span>Send 6-Digit OTP</span>
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleCitizenLogin} className="space-y-4">
-              <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-xs text-emerald-900 flex items-center justify-between">
-                <span>OTP sent to <strong>+91 {phone}</strong></span>
-                <span className="font-mono font-bold bg-emerald-200 px-2 py-0.5 rounded-md">
-                  Code: {simulatedOtp}
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
-                  Enter 6-Digit OTP
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="Enter OTP"
-                  className="w-full text-center tracking-widest text-lg font-mono p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-hidden font-bold"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold py-3 rounded-xl shadow-md transition-all"
-              >
-                Verify & Enter Platform
+                {isLoading ? (
+                  <span>Authenticating...</span>
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </form>
           )}
-        </div>
-      )}
 
-      {/* 2. NGO STAFF & ONBOARDING */}
-      {authRole === ROLES.NGO && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-lg mx-auto shadow-md space-y-6 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <h2 className="text-base font-extrabold text-slate-900">NGO Coordinator Workspace</h2>
-              <p className="text-xs text-slate-500">Manage SOS dispatches, campaigns, and volunteer check-ins</p>
-            </div>
-            <span className="text-2xl">🏢</span>
-          </div>
+          {/* TAB 2: REGISTER */}
+          {activeTab === 'register' && (
+            <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    placeholder="Rohan Sharma"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 outline-hidden"
+                  />
+                </div>
 
-          {/* Quick Demo 1-Click Button */}
-          <button
-            type="button"
-            onClick={() => {
-              switchRole(ROLES.NGO);
-              setActiveTab('ngo-dashboard');
-            }}
-            className="w-full bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 p-3 rounded-2xl flex items-center justify-between text-xs font-bold transition-all group"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-blue-600" />
-              <span>1-Click Demo Login as <strong>Priya @ Hope Horizon</strong></span>
-            </div>
-            <ArrowRight className="w-4 h-4 text-blue-700 group-hover:translate-x-0.5 transition-transform" />
-          </button>
-
-          {/* Toggle Login vs Onboarding Register */}
-          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setIsNgoRegister(false)}
-              className={`flex-1 py-1.5 rounded-lg transition-all ${
-                !isNgoRegister ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Sign In Existing NGO
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsNgoRegister(true)}
-              className={`flex-1 py-1.5 rounded-lg transition-all ${
-                isNgoRegister ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              + Register New NGO
-            </button>
-          </div>
-
-          {!isNgoRegister ? (
-            /* NGO Login Form */
-            <form onSubmit={handleNgoLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
-                  Coordinator Email / NGO ID
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={ngoEmail}
-                  onChange={(e) => setNgoEmail(e.target.value)}
-                  placeholder="contact@hopehorizon.org"
-                  className="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-hidden font-medium"
-                />
+                <div>
+                  <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
+                    Username <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={regUsername}
+                    onChange={(e) => setRegUsername(e.target.value)}
+                    placeholder="rohan_s"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 outline-hidden font-mono"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={ngoPassword}
-                  onChange={(e) => setNgoPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-hidden font-medium"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    placeholder="rohan@example.com"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={regPhone}
+                    onChange={(e) => setRegPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    placeholder="Min 6 characters"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
+                    Confirm Password <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={regConfirmPassword}
+                    onChange={(e) => setRegConfirmPassword(e.target.value)}
+                    placeholder="Repeat password"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 outline-hidden"
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold py-3 rounded-xl shadow-md transition-all"
+                disabled={isLoading}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
               >
-                Access NGO Dashboard
+                {isLoading ? (
+                  <span>Creating Account...</span>
+                ) : (
+                  <>
+                    <span>Create Account</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </form>
-          ) : (
-            /* NGO Registration Form */
-            <form onSubmit={handleNgoRegister} className="space-y-3.5 text-xs">
+          )}
+
+          {/* TAB 3: NGO ONBOARDING */}
+          {activeTab === 'ngo' && (
+            <form onSubmit={handleNgoRegisterSubmit} className="space-y-3.5 text-xs">
               <div>
                 <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
-                  NGO / Trust Name <span className="text-red-500">*</span>
+                  NGO / Shelter Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  value={regNgoName}
-                  onChange={(e) => setRegNgoName(e.target.value)}
-                  placeholder="e.g. Seva Bharat Animal Hospital"
+                  value={ngoName}
+                  onChange={(e) => setNgoName(e.target.value)}
+                  placeholder="e.g. Navjeevan Animal Trust"
                   className="w-full p-2.5 rounded-xl border border-slate-300 outline-hidden"
                 />
               </div>
@@ -442,25 +465,25 @@ export const AuthPage = () => {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
-                    NGO Darpan ID <span className="text-red-500">*</span>
+                    Government Darpan ID <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
-                    value={regDarpan}
-                    onChange={(e) => setRegDarpan(e.target.value)}
-                    placeholder="MH/2024/099128"
+                    value={ngoDarpan}
+                    onChange={(e) => setNgoDarpan(e.target.value)}
+                    placeholder="MH/2024/099120"
                     className="w-full p-2.5 rounded-xl border border-slate-300 font-mono"
                   />
                 </div>
 
                 <div>
                   <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
-                    Primary Category
+                    Emergency Category
                   </label>
                   <select
-                    value={regCategory}
-                    onChange={(e) => setRegCategory(e.target.value)}
+                    value={ngoCategory}
+                    onChange={(e) => setNgoCategory(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-slate-300 bg-slate-50 font-semibold"
                   >
                     <option value="child">👶 Child Welfare</option>
@@ -475,118 +498,51 @@ export const AuthPage = () => {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
-                    Official Email <span className="text-red-500">*</span>
+                    Coordinator Email <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
                     required
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    placeholder="ngo@domain.org"
+                    value={ngoEmail}
+                    onChange={(e) => setNgoEmail(e.target.value)}
+                    placeholder="contact@trust.org"
                     className="w-full p-2.5 rounded-xl border border-slate-300"
                   />
                 </div>
 
                 <div>
                   <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
-                    Phone / Hotline
+                    Password <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="tel"
+                    type="password"
                     required
-                    value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    placeholder="+91 98000 00000"
+                    value={ngoPassword}
+                    onChange={(e) => setNgoPassword(e.target.value)}
+                    placeholder="Min 6 characters"
                     className="w-full p-2.5 rounded-xl border border-slate-300"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-800 uppercase tracking-wider mb-1">
-                  Description & Mission
-                </label>
-                <textarea
-                  rows={2}
-                  value={regDescription}
-                  onChange={(e) => setRegDescription(e.target.value)}
-                  placeholder="Briefly describe your shelters and rescue services..."
-                  className="w-full p-2.5 rounded-xl border border-slate-300"
-                />
-              </div>
-
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3 rounded-xl shadow-md transition-all"
+                disabled={isLoading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
               >
-                Submit for Admin Accreditation
+                {isLoading ? (
+                  <span>Submitting Application...</span>
+                ) : (
+                  <>
+                    <span>Submit for Admin Accreditation</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </form>
           )}
         </div>
-      )}
-
-      {/* 3. PLATFORM ADMIN LOGIN */}
-      {authRole === ROLES.ADMIN && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-lg mx-auto shadow-md space-y-6 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <h2 className="text-base font-extrabold text-slate-900">Platform Admin Master Console</h2>
-              <p className="text-xs text-slate-500">Statutory verification, incident moderation & analytics</p>
-            </div>
-            <span className="text-2xl">🛡️</span>
-          </div>
-
-          {/* Quick Demo 1-Click Button */}
-          <button
-            type="button"
-            onClick={() => {
-              switchRole(ROLES.ADMIN);
-              setActiveTab('admin-dashboard');
-            }}
-            className="w-full bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 p-3 rounded-2xl flex items-center justify-between text-xs font-bold transition-all group"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-600" />
-              <span>1-Click Demo Login as <strong>Ananya Roy (Admin)</strong></span>
-            </div>
-            <ArrowRight className="w-4 h-4 text-purple-700 group-hover:translate-x-0.5 transition-transform" />
-          </button>
-
-          <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-slate-200"></div>
-            <span className="shrink-0 mx-4 text-slate-400 text-[11px] uppercase font-bold">Or Enter Admin Passkey</span>
-            <div className="flex-grow border-t border-slate-200"></div>
-          </div>
-
-          <form onSubmit={handleAdminLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
-                Admin Master Passcode
-              </label>
-              <div className="relative">
-                <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="password"
-                  value={adminKey}
-                  onChange={(e) => setAdminKey(e.target.value)}
-                  placeholder="Enter passcode (default: admin123)"
-                  className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-purple-500 outline-hidden font-mono"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold py-3 rounded-xl shadow-md transition-all"
-            >
-              Enter Admin Control Console
-            </button>
-          </form>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

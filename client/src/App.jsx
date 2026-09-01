@@ -2,6 +2,7 @@ import React from 'react';
 import { AppProvider, useApp, ROLES } from './context/AppContext';
 import { RoleSwitcher } from './components/RoleSwitcher';
 import { Navbar } from './components/Navbar';
+import { AuthModal } from './components/AuthModal';
 import { IncidentReporterModal } from './components/IncidentReporterModal';
 import { IncidentTimelineModal } from './components/IncidentTimelineModal';
 import { AdoptionModal } from './components/AdoptionModal';
@@ -22,11 +23,12 @@ import { NgoDashboardPage } from './pages/NgoDashboardPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { AuthPage } from './pages/AuthPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 import { HeartHandshake, ShieldCheck, Scale, Lock, QrCode } from 'lucide-react';
 
 const MainLayout = () => {
-  const { activeTab, currentRole } = useApp();
+  const { activeTab, currentUser, setActiveTab } = useApp();
 
   const renderActiveScreen = () => {
     switch (activeTab) {
@@ -45,6 +47,25 @@ const MainLayout = () => {
       case 'volunteering':
         return <VolunteeringPage />;
       case 'profile':
+        if (!currentUser) {
+          return (
+            <div className="max-w-md mx-auto py-16 text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200">
+                <Lock className="w-8 h-8" />
+              </div>
+              <h2 className="text-lg font-extrabold text-slate-900">Sign In to View Your Impact</h2>
+              <p className="text-xs text-slate-500">
+                Please log in or create an account to view your donations, 80G tax receipts, and volunteer passes.
+              </p>
+              <button
+                onClick={() => setActiveTab('auth')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-6 py-3 rounded-xl shadow-md"
+              >
+                Sign In / Register
+              </button>
+            </div>
+          );
+        }
         return <UserProfilePage />;
       case 'ngo-dashboard':
       case 'ngo-needs':
@@ -52,23 +73,61 @@ const MainLayout = () => {
       case 'ngo-volunteers':
       case 'ngo-donations':
       case 'ngo-profile':
+        if (!currentUser || (currentUser.role !== 'ngo' && currentUser.role !== 'admin')) {
+          return (
+            <div className="max-w-md mx-auto py-16 text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-200">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+              <h2 className="text-lg font-extrabold text-slate-900">NGO Partner Access Required</h2>
+              <p className="text-xs text-slate-500">
+                This area is reserved for registered NGO coordinators managing dispatches, campaigns, and volunteer attendance.
+              </p>
+              <button
+                onClick={() => setActiveTab('auth')}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-6 py-3 rounded-xl shadow-md"
+              >
+                NGO Sign In / Onboarding
+              </button>
+            </div>
+          );
+        }
         return <NgoDashboardPage />;
       case 'admin-dashboard':
       case 'admin-incidents':
       case 'admin-analytics':
+        if (!currentUser || currentUser.role !== 'admin') {
+          return (
+            <div className="max-w-md mx-auto py-16 text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto border border-purple-200">
+                <Lock className="w-8 h-8" />
+              </div>
+              <h2 className="text-lg font-extrabold text-slate-900">Administrator Clearance Required</h2>
+              <p className="text-xs text-slate-500">
+                Only authorized platform governance officers can access accreditation review queues and audit logs.
+              </p>
+              <button
+                onClick={() => setActiveTab('auth')}
+                className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-6 py-3 rounded-xl shadow-md"
+              >
+                Admin Sign In
+              </button>
+            </div>
+          );
+        }
         return <AdminDashboardPage />;
       default:
-        return <PublicHome />;
+        return <NotFoundPage />;
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
       <div>
-        {/* Quick Role Switcher Bar */}
+        {/* Interactive Role Switcher Bar */}
         <RoleSwitcher />
 
-        {/* Navigation */}
+        {/* Top Navbar */}
         <Navbar />
 
         {/* Main Content Area */}
@@ -77,7 +136,8 @@ const MainLayout = () => {
         </main>
       </div>
 
-      {/* Global Modals & Floating Tools */}
+      {/* Global Modals & Protected Action Gateways */}
+      <AuthModal />
       <IncidentReporterModal />
       <IncidentTimelineModal />
       <AdoptionModal />

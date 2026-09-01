@@ -3,9 +3,12 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || 'ngo_connect_jwt_secret_dev_2026_super_secure';
 const DB_FILE = path.join(__dirname, 'data', 'db.json');
 
 app.use(cors());
@@ -46,6 +49,148 @@ const writeDB = (data) => {
   }
 };
 
+// Strip password from user object
+const sanitizeUser = (user) => {
+  if (!user) return null;
+  const { password, ...safeUser } = user;
+  return safeUser;
+};
+
+// Initialize Admin & Seed Passwords with Bcrypt
+const initializeDatabaseSecurity = () => {
+  const db = readDB();
+  let modified = false;
+
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@ngoconnect.org';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@SecurePass2026!';
+  const defaultUserPassword = 'Password@123';
+
+  // Check or initialize Admin
+  let admin = db.users.find(u => u.role === 'admin');
+  if (!admin) {
+    admin = {
+      id: 'admin-root',
+      username: 'admin',
+      name: process.env.ADMIN_NAME || 'Ananya Roy (Platform Admin)',
+      email: adminEmail,
+      phone: '+91 91100 99887',
+      role: 'admin',
+      password: bcrypt.hashSync(adminPassword, 10),
+      city: 'Pan-India',
+      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'
+    };
+    db.users.push(admin);
+    modified = true;
+  } else if (!admin.password || !admin.password.startsWith('$2')) {
+    admin.password = bcrypt.hashSync(adminPassword, 10);
+    modified = true;
+  }
+
+  // Ensure all seed users have bcrypt hashed passwords
+  db.users.forEach(u => {
+    if (!u.password || !u.password.startsWith('$2')) {
+      u.password = bcrypt.hashSync(defaultUserPassword, 10);
+      modified = true;
+    }
+    if (!u.username) {
+      u.username = u.email.split('@')[0];
+      modified = true;
+    }
+  });
+
+  if (modified) {
+    writeDB(db);
+    console.log('✓ Security initialized: Passwords hashed with bcrypt.');
+  }
+};
+
+initializeDatabaseSecurity();
+
+// Helper to generate JWT token
+const generateToken = (user) => {
+  return jwt.sign(
+    {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+      ngoId: user.ngoId || null
+    },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+};
+
+/* ==========================================================================
+   AUTHENTICATION & AUTHORIZATION MIDDLEWARES
+   ========================================================================== */
+
+// Verify JWT Token (Mandatory)
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required. Please log in or create an account to continue.'
+    });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired session. Please log in again.'
+      });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
+// Optional Auth (Attaches req.user if token is present, continues without error if absent)
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (!err) {
+      req.user = decoded;
+    } else {
+      req.user = null;
+    }
+    next();
+  });
+};
+
+// Role-Based Authorization
+const requireRole = (allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required. Please log in.'
+      });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Forbidden: You need ${allowedRoles.join(' or ')} privileges to perform this action.`
+      });
+    }
+
+    next();
+  };
+};
+
 // Haversine formula for distance in kilometers
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
@@ -66,13 +211,11 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 const routeIncidentToNearestNGO = (incident, ngos) => {
   const verifiedNgos = ngos.filter(n => n.isVerified || n.verificationStatus === 'verified');
   
-  // First filter by category match
   let candidates = verifiedNgos.filter(n => 
     n.category === incident.category || 
     (n.subCategories && n.subCategories.includes(incident.category))
   );
 
-  // Fallback to any verified NGO if no direct category match
   if (candidates.length === 0) {
     candidates = verifiedNgos;
   }
@@ -81,7 +224,6 @@ const routeIncidentToNearestNGO = (incident, ngos) => {
     return { ngo: null, distance: null };
   }
 
-  // Calculate distance for all candidates
   const withDistance = candidates.map(ngo => {
     const dist = calculateDistance(
       incident.geo?.lat,
@@ -92,7 +234,6 @@ const routeIncidentToNearestNGO = (incident, ngos) => {
     return { ngo, dist };
   });
 
-  // Sort by nearest distance
   withDistance.sort((a, b) => a.dist - b.dist);
   return {
     ngo: withDistance[0].ngo,
@@ -101,101 +242,127 @@ const routeIncidentToNearestNGO = (incident, ngos) => {
 };
 
 /* ==========================================================================
-   AUTHENTICATION API (Citizens, NGO Staff & Platform Admin)
+   REAL AUTHENTICATION API (Registration, Login, User Me)
    ========================================================================== */
 
-// Send OTP simulation
-app.post('/api/auth/send-otp', (req, res) => {
-  const { phone } = req.body;
-  if (!phone) return res.status(400).json({ success: false, message: 'Phone number is required.' });
-
-  const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-  res.json({
-    success: true,
-    message: `OTP sent successfully to ${phone}!`,
-    simulatedOtp: generatedOtp // Returned for seamless testing in demo mode
-  });
-});
-
-// Login endpoint
-app.post('/api/auth/login', (req, res) => {
+// Real User Registration with bcrypt
+app.post('/api/auth/register', (req, res) => {
   const db = readDB();
-  const { role = 'public', identifier, password, otp } = req.body;
+  const { name, username, email, phone, password, confirmPassword, city } = req.body;
 
-  if (role === 'admin') {
-    // Admin Passcode check
-    if (password === 'admin123' || password === 'root' || !password) {
-      const adminUser = db.users.find(u => u.role === 'admin') || {
-        id: 'admin-root',
-        name: 'Ananya Roy (Platform Admin)',
-        email: 'admin@ngoconnect.org',
-        role: 'admin',
-        city: 'Pan-India',
-        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'
-      };
-      return res.json({ success: true, user: adminUser, token: `tok_admin_${Date.now()}` });
-    } else {
-      return res.status(401).json({ success: false, message: 'Invalid Admin passcode. Try "admin123".' });
-    }
+  // Validation
+  if (!name || !email || !password) {
+    return res.status(400).json({ success: false, message: 'Full name, email, and password are required.' });
   }
 
-  if (role === 'ngo') {
-    // NGO Staff login
-    const ngoUser = db.users.find(u => u.role === 'ngo' && (u.email === identifier || u.phone === identifier)) || db.users.find(u => u.role === 'ngo');
-    return res.json({ success: true, user: ngoUser, token: `tok_ngo_${Date.now()}` });
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ success: false, message: 'Please provide a valid email address.' });
   }
 
-  // Public Citizen Login
-  let citizen = db.users.find(u => u.role === 'public' && (u.email === identifier || u.phone === identifier));
-  if (!citizen) {
-    citizen = db.users.find(u => u.role === 'public') || {
-      id: `user-${Date.now()}`,
-      name: identifier ? identifier.split('@')[0] : 'Citizen User',
-      email: identifier || 'citizen@example.com',
-      phone: '+91 98765 43210',
-      role: 'public',
-      city: 'Mumbai',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      karmaPoints: 100
-    };
+  if (password.length < 6) {
+    return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
   }
 
-  res.json({ success: true, user: citizen, token: `tok_user_${Date.now()}` });
-});
+  if (confirmPassword && password !== confirmPassword) {
+    return res.status(400).json({ success: false, message: 'Passwords do not match.' });
+  }
 
-// Citizen Registration
-app.post('/api/auth/register-user', (req, res) => {
-  const db = readDB();
-  const { name, email, phone, city } = req.body;
+  const normalizedEmail = email.toLowerCase().trim();
+  const rawUsername = username ? username.trim().toLowerCase() : normalizedEmail.split('@')[0];
 
-  if (!name || !phone) {
-    return res.status(400).json({ success: false, message: 'Name and phone are required.' });
+  // Uniqueness checks
+  if (db.users.some(u => u.email.toLowerCase() === normalizedEmail)) {
+    return res.status(400).json({ success: false, message: 'An account with this email address already exists.' });
+  }
+
+  if (db.users.some(u => u.username && u.username.toLowerCase() === rawUsername)) {
+    return res.status(400).json({ success: false, message: 'This username is already taken. Please choose another.' });
   }
 
   const newUser = {
     id: `user-${Date.now().toString().slice(-6)}`,
-    name,
-    email: email || `${name.toLowerCase().replace(/\s+/g, '')}@example.com`,
-    phone,
+    username: rawUsername,
+    name: name.trim(),
+    email: normalizedEmail,
+    phone: phone ? phone.trim() : '+91 98765 43210',
     role: 'public',
+    password: bcrypt.hashSync(password, 10),
     city: city || 'Mumbai',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-    karmaPoints: 50,
-    badges: ['New Member']
+    karmaPoints: 100,
+    badges: ['Welcome Member'],
+    createdAt: new Date().toISOString()
   };
 
   db.users.push(newUser);
   writeDB(db);
-  res.status(201).json({ success: true, user: newUser, token: `tok_user_${Date.now()}` });
+
+  const token = generateToken(newUser);
+  res.status(201).json({
+    success: true,
+    message: 'Account created successfully!',
+    user: sanitizeUser(newUser),
+    token
+  });
 });
 
-// NGO Onboarding Registration (creates NGO in 'pending' status for Admin queue)
+// Real User Login with bcrypt.compare
+app.post('/api/auth/login', (req, res) => {
+  const db = readDB();
+  const { emailOrUsername, password } = req.body;
+
+  if (!emailOrUsername || !password) {
+    return res.status(400).json({ success: false, message: 'Please provide both your username/email and password.' });
+  }
+
+  const identifier = emailOrUsername.toLowerCase().trim();
+
+  // Find user by email or username or phone
+  const user = db.users.find(u => 
+    u.email.toLowerCase() === identifier || 
+    (u.username && u.username.toLowerCase() === identifier) ||
+    (u.phone && u.phone.replace(/\s+/g, '') === identifier.replace(/\s+/g, ''))
+  );
+
+  if (!user || !user.password) {
+    // Uniform message to avoid account enumeration
+    return res.status(401).json({ success: false, message: 'Invalid username or password.' });
+  }
+
+  // Verify bcrypt hash
+  const isValid = bcrypt.compareSync(password, user.password);
+  if (!isValid) {
+    return res.status(401).json({ success: false, message: 'Invalid username or password.' });
+  }
+
+  const token = generateToken(user);
+  res.json({
+    success: true,
+    message: `Welcome back, ${user.name}!`,
+    user: sanitizeUser(user),
+    token
+  });
+});
+
+// Verify active session & return fresh user data
+app.get('/api/auth/me', authenticateToken, (req, res) => {
+  const db = readDB();
+  const user = db.users.find(u => u.id === req.user.id);
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User account not found.' });
+  }
+  res.json({ success: true, user: sanitizeUser(user) });
+});
+
+// NGO Onboarding & Coordinator Registration (Requires verification)
 app.post('/api/auth/register-ngo', (req, res) => {
   const db = readDB();
   const {
     ngoName,
     coordinatorName,
     email,
+    password,
     phone,
     darpanId,
     registrationNo,
@@ -205,25 +372,30 @@ app.post('/api/auth/register-ngo', (req, res) => {
     description
   } = req.body;
 
-  if (!ngoName || !darpanId || !email) {
-    return res.status(400).json({ success: false, message: 'Organization name, Darpan ID, and email are required.' });
+  if (!ngoName || !darpanId || !email || !password) {
+    return res.status(400).json({ success: false, message: 'Organization name, Darpan ID, email, and password are required.' });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  if (db.users.some(u => u.email.toLowerCase() === normalizedEmail)) {
+    return res.status(400).json({ success: false, message: 'An account with this email address already exists.' });
   }
 
   const ngoId = `ngo-${Date.now().toString().slice(-4)}`;
   const newNgo = {
     id: ngoId,
-    name: ngoName,
+    name: ngoName.trim(),
     category: category || 'child',
     subCategories: [category || 'child', 'medical'],
-    darpanId,
-    registrationNo: registrationNo || `REG-${Math.floor(10000 + Math.random() * 90000)}/MH`,
+    darpanId: darpanId.trim(),
+    registrationNo: registrationNo ? registrationNo.trim() : `REG-${Math.floor(10000 + Math.random() * 90000)}/MH`,
     isVerified: false,
     verificationStatus: 'pending',
     city: city || 'Mumbai',
     area: area || 'Central',
     geo: { lat: 19.0760, lng: 72.8777 },
-    phone: phone || '+91 98000 00000',
-    email,
+    phone: phone ? phone.trim() : '+91 98000 00000',
+    email: normalizedEmail,
     website: `https://${ngoName.toLowerCase().replace(/\s+/g, '')}.org`,
     logo: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=150&auto=format&fit=crop&q=80',
     banner: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80',
@@ -237,14 +409,17 @@ app.post('/api/auth/register-ngo', (req, res) => {
 
   const coordinatorUser = {
     id: `ngo-user-${Date.now().toString().slice(-4)}`,
-    name: coordinatorName || `${ngoName} Coordinator`,
-    email,
-    phone: phone || '+91 98000 00000',
+    username: normalizedEmail.split('@')[0],
+    name: coordinatorName ? coordinatorName.trim() : `${ngoName} Coordinator`,
+    email: normalizedEmail,
+    phone: phone ? phone.trim() : '+91 98000 00000',
     role: 'ngo',
     ngoId,
-    ngoName,
+    ngoName: newNgo.name,
+    password: bcrypt.hashSync(password, 10),
     city: city || 'Mumbai',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    createdAt: new Date().toISOString()
   };
 
   db.ngos.unshift(newNgo);
@@ -255,7 +430,7 @@ app.post('/api/auth/register-ngo', (req, res) => {
     id: `notif-reg-${Date.now()}`,
     targetRole: 'admin',
     title: 'New NGO Registration Pending Verification',
-    message: `${ngoName} (Darpan: ${darpanId}) submitted documents for platform accreditation.`,
+    message: `${newNgo.name} (Darpan: ${newNgo.darpanId}) submitted documents for platform accreditation.`,
     timestamp: new Date().toISOString(),
     read: false,
     link: '/admin/verifications'
@@ -263,20 +438,21 @@ app.post('/api/auth/register-ngo', (req, res) => {
 
   writeDB(db);
 
+  const token = generateToken(coordinatorUser);
   res.status(201).json({
     success: true,
-    user: coordinatorUser,
+    user: sanitizeUser(coordinatorUser),
     ngo: newNgo,
-    token: `tok_ngo_${Date.now()}`,
+    token,
     message: 'NGO onboarding submitted! Application queued for Admin verification.'
   });
 });
 
 /* ==========================================================================
-   INCIDENTS API (Flagship Smart Emergency Incident System)
+   INCIDENTS API (Publicly viewable, reporting supports optionalAuth/guest)
    ========================================================================== */
 
-// Get all incidents with optional filters
+// Get all incidents (Public)
 app.get('/api/incidents', (req, res) => {
   const db = readDB();
   let incidents = [...db.incidents];
@@ -298,7 +474,6 @@ app.get('/api/incidents', (req, res) => {
     incidents = incidents.filter(i => i.status === status);
   }
 
-  // Sort by critical priority first, then recency
   const priorityWeight = { critical: 4, high: 3, medium: 2, low: 1 };
   incidents.sort((a, b) => {
     const diff = (priorityWeight[b.priority] || 0) - (priorityWeight[a.priority] || 0);
@@ -309,7 +484,7 @@ app.get('/api/incidents', (req, res) => {
   res.json({ success: true, count: incidents.length, data: incidents });
 });
 
-// Get single incident
+// Get single incident (Public)
 app.get('/api/incidents/:id', (req, res) => {
   const db = readDB();
   const incident = db.incidents.find(i => i.id === req.params.id);
@@ -319,8 +494,8 @@ app.get('/api/incidents/:id', (req, res) => {
   res.json({ success: true, data: incident });
 });
 
-// Report a new incident (Auto-routes & creates timeline)
-app.post('/api/incidents', (req, res) => {
+// Report a new incident (Guest or Auth)
+app.post('/api/incidents', optionalAuth, (req, res) => {
   const db = readDB();
   const {
     category,
@@ -332,7 +507,6 @@ app.post('/api/incidents', (req, res) => {
     geo,
     address,
     isAnonymous = false,
-    reporterId,
     reporterName,
     reporterPhone
   } = req.body;
@@ -343,9 +517,12 @@ app.post('/api/incidents', (req, res) => {
 
   const newIncidentId = `inc-${Date.now().toString().slice(-6)}`;
   const now = new Date().toISOString();
-
-  // Route to nearest NGO
   const { ngo, distance } = routeIncidentToNearestNGO({ category, geo }, db.ngos);
+
+  const effectiveReporterName = isAnonymous 
+    ? 'Anonymous Citizen' 
+    : (req.user?.name || reporterName || 'Concerned Citizen');
+  const effectiveReporterId = isAnonymous ? null : (req.user?.id || null);
 
   const initialTimeline = [
     {
@@ -354,7 +531,7 @@ app.post('/api/incidents', (req, res) => {
       timestamp: now,
       note: isAnonymous 
         ? 'Report submitted securely as an Anonymous Citizen.' 
-        : `Report submitted by ${reporterName || 'Citizen'} with GPS & photo verification.`
+        : `Report submitted by ${effectiveReporterName} with GPS & photo verification.`
     }
   ];
 
@@ -378,9 +555,9 @@ app.post('/api/incidents', (req, res) => {
     geo: geo || { lat: 19.0760, lng: 72.8777 },
     address: address || 'Mumbai Central, Maharashtra',
     isAnonymous: Boolean(isAnonymous),
-    reporterId: isAnonymous ? null : (reporterId || 'user-rohan'),
-    reporterName: isAnonymous ? 'Anonymous Citizen' : (reporterName || 'Rohan Sharma'),
-    reporterPhone: isAnonymous ? null : (reporterPhone || '+91 98765 43210'),
+    reporterId: effectiveReporterId,
+    reporterName: effectiveReporterName,
+    reporterPhone: isAnonymous ? null : (req.user?.phone || reporterPhone || null),
     assignedNgoId: ngo ? ngo.id : null,
     assignedNgoName: ngo ? ngo.name : 'Pending Assignment',
     distanceKm: distance,
@@ -392,7 +569,6 @@ app.post('/api/incidents', (req, res) => {
 
   db.incidents.unshift(newIncident);
 
-  // Generate notification for NGO
   if (ngo) {
     db.notifications.unshift({
       id: `notif-${Date.now()}`,
@@ -406,27 +582,12 @@ app.post('/api/incidents', (req, res) => {
     });
   }
 
-  // Notification for citizen
-  if (!isAnonymous && reporterId) {
-    db.notifications.unshift({
-      id: `notif-c-${Date.now()}`,
-      targetRole: 'public',
-      userId: reporterId,
-      title: `Incident #${newIncidentId} Dispatched`,
-      message: ngo ? `Assigned to ${ngo.name}. Rescue team alerted.` : 'Report submitted and queued for verification.',
-      timestamp: now,
-      read: false,
-      link: `/incidents/${newIncidentId}`
-    });
-  }
-
   writeDB(db);
   res.status(201).json({ success: true, data: newIncident, message: 'Emergency incident reported and auto-assigned!' });
 });
 
-// Update Incident Status (Timeline Step progression)
-// Sequence: reported -> assigned -> accepted -> team_dispatched -> reached_location -> help_provided -> resolved
-app.patch('/api/incidents/:id/status', (req, res) => {
+// Update Incident Status (Protected: NGO or Admin)
+app.patch('/api/incidents/:id/status', authenticateToken, requireRole(['ngo', 'admin']), (req, res) => {
   const db = readDB();
   const incident = db.incidents.find(i => i.id === req.params.id);
   if (!incident) {
@@ -461,7 +622,6 @@ app.patch('/api/incidents/:id/status', (req, res) => {
     note: note || (status === 'resolved' ? (resolvedNote || 'Incident closed with verified assistance.') : `Case updated to ${stepTitle}.`)
   });
 
-  // Notify reporter if not anonymous
   if (incident.reporterId) {
     db.notifications.unshift({
       id: `notif-u-${Date.now()}`,
@@ -480,10 +640,10 @@ app.patch('/api/incidents/:id/status', (req, res) => {
 });
 
 /* ==========================================================================
-   NGO DIRECTORY & VERIFICATION API
+   NGO DIRECTORY & NEEDS API (Publicly viewable)
    ========================================================================== */
 
-// List NGOs
+// List NGOs (Public)
 app.get('/api/ngos', (req, res) => {
   const db = readDB();
   let ngos = [...db.ngos];
@@ -507,7 +667,7 @@ app.get('/api/ngos', (req, res) => {
   res.json({ success: true, count: ngos.length, data: ngos });
 });
 
-// Single NGO
+// Single NGO (Public)
 app.get('/api/ngos/:id', (req, res) => {
   const db = readDB();
   const ngo = db.ngos.find(n => n.id === req.params.id);
@@ -517,8 +677,8 @@ app.get('/api/ngos/:id', (req, res) => {
   res.json({ success: true, data: ngo });
 });
 
-// Post urgent need
-app.post('/api/ngos/:id/needs', (req, res) => {
+// Post urgent need (Protected: NGO or Admin)
+app.post('/api/ngos/:id/needs', authenticateToken, requireRole(['ngo', 'admin']), (req, res) => {
   const db = readDB();
   const ngo = db.ngos.find(n => n.id === req.params.id);
   if (!ngo) return res.status(404).json({ success: false, message: 'NGO not found' });
@@ -542,10 +702,10 @@ app.post('/api/ngos/:id/needs', (req, res) => {
 });
 
 /* ==========================================================================
-   ADOPTION & ELDERLY SPONSORSHIP API (CARA Compliant Layer)
+   ADOPTION & ELDERLY SPONSORSHIP API (CARA Compliance Bridge)
    ========================================================================== */
 
-// List listings
+// List listings (Public)
 app.get('/api/adoption-listings', (req, res) => {
   const db = readDB();
   let listings = [...db.adoptionListings];
@@ -564,8 +724,8 @@ app.get('/api/adoption-listings', (req, res) => {
   res.json({ success: true, count: listings.length, data: listings });
 });
 
-// Post new listing (NGO only)
-app.post('/api/adoption-listings', (req, res) => {
+// Post new listing (Protected: NGO or Admin)
+app.post('/api/adoption-listings', authenticateToken, requireRole(['ngo', 'admin']), (req, res) => {
   const db = readDB();
   const {
     ngoId,
@@ -580,7 +740,7 @@ app.post('/api/adoption-listings', (req, res) => {
     caraNote
   } = req.body;
 
-  const ngo = db.ngos.find(n => n.id === ngoId) || db.ngos[0];
+  const ngo = db.ngos.find(n => n.id === (ngoId || req.user.ngoId)) || db.ngos[0];
   const isChild = type === 'child';
 
   const newListing = {
@@ -608,18 +768,10 @@ app.post('/api/adoption-listings', (req, res) => {
   res.status(201).json({ success: true, data: newListing });
 });
 
-// Submit non-binding Inquiry
-app.post('/api/adoption-inquiries', (req, res) => {
+// Submit non-binding Inquiry (Protected: Must be logged in)
+app.post('/api/adoption-inquiries', authenticateToken, (req, res) => {
   const db = readDB();
-  const {
-    listingId,
-    userId,
-    userName,
-    userPhone,
-    userEmail,
-    inquiryType,
-    message
-  } = req.body;
+  const { listingId, inquiryType, message } = req.body;
 
   const listing = db.adoptionListings.find(l => l.id === listingId);
   if (!listing) {
@@ -633,10 +785,10 @@ app.post('/api/adoption-inquiries', (req, res) => {
     type: listing.type,
     ngoId: listing.ngoId,
     ngoName: listing.ngoName,
-    userId: userId || 'user-rohan',
-    userName: userName || 'Rohan Sharma',
-    userPhone: userPhone || '+91 98765 43210',
-    userEmail: userEmail || 'rohan.sharma@example.com',
+    userId: req.user.id,
+    userName: req.user.name,
+    userPhone: req.user.phone || '+91 98765 43210',
+    userEmail: req.user.email,
     inquiryType: inquiryType || (listing.type === 'child' ? 'CARA Pre-Counseling & Discovery' : 'Elderly Sponsorship & Visit'),
     message: message || '',
     status: 'pending',
@@ -646,13 +798,12 @@ app.post('/api/adoption-inquiries', (req, res) => {
 
   db.adoptionInquiries.unshift(newInquiry);
 
-  // Notify NGO
   db.notifications.unshift({
     id: `notif-inq-${Date.now()}`,
     targetRole: 'ngo',
     ngoId: listing.ngoId,
     title: `New Inquiry for ${listing.name} (${listing.type.toUpperCase()})`,
-    message: `Received from ${userName || 'Citizen'}: "${message.slice(0, 60)}..."`,
+    message: `Received from ${req.user.name}: "${(message || '').slice(0, 60)}..."`,
     timestamp: new Date().toISOString(),
     read: false,
     link: `/ngo/adoption`
@@ -668,24 +819,25 @@ app.post('/api/adoption-inquiries', (req, res) => {
   });
 });
 
-// Get inquiries (for user or NGO)
-app.get('/api/adoption-inquiries', (req, res) => {
+// Get inquiries (Protected)
+app.get('/api/adoption-inquiries', authenticateToken, (req, res) => {
   const db = readDB();
   let inquiries = [...db.adoptionInquiries];
-  const { userId, ngoId } = req.query;
 
-  if (userId) {
-    inquiries = inquiries.filter(i => i.userId === userId);
-  }
-  if (ngoId) {
-    inquiries = inquiries.filter(i => i.ngoId === ngoId);
+  if (req.user.role === 'admin') {
+    // Admin sees all
+  } else if (req.user.role === 'ngo') {
+    inquiries = inquiries.filter(i => i.ngoId === req.user.ngoId);
+  } else {
+    // Citizen sees own
+    inquiries = inquiries.filter(i => i.userId === req.user.id);
   }
 
   res.json({ success: true, count: inquiries.length, data: inquiries });
 });
 
-// Update inquiry status
-app.patch('/api/adoption-inquiries/:id', (req, res) => {
+// Update inquiry status (Protected: NGO or Admin)
+app.patch('/api/adoption-inquiries/:id', authenticateToken, requireRole(['ngo', 'admin']), (req, res) => {
   const db = readDB();
   const inquiry = db.adoptionInquiries.find(i => i.id === req.params.id);
   if (!inquiry) return res.status(404).json({ success: false, message: 'Inquiry not found' });
@@ -699,10 +851,10 @@ app.patch('/api/adoption-inquiries/:id', (req, res) => {
 });
 
 /* ==========================================================================
-   DONATIONS & CAMPAIGNS API (Anonymous by default)
+   DONATIONS & CAMPAIGNS API (Anonymous by default, 80G Receipts)
    ========================================================================== */
 
-// List campaigns
+// List campaigns (Public)
 app.get('/api/campaigns', (req, res) => {
   const db = readDB();
   const { category, ngoId } = req.query;
@@ -718,16 +870,12 @@ app.get('/api/campaigns', (req, res) => {
   res.json({ success: true, count: campaigns.length, data: campaigns });
 });
 
-// Process donation (with anonymity protection)
-app.post('/api/donations', (req, res) => {
+// Process donation (Protected: Login required)
+app.post('/api/donations', authenticateToken, (req, res) => {
   const db = readDB();
   const {
     campaignId,
     ngoId,
-    userId,
-    donorName,
-    donorEmail,
-    donorPhone,
     amount,
     isAnonymousPublic = true,
     showDonorName = false,
@@ -765,10 +913,10 @@ app.post('/api/donations', (req, res) => {
     campaignTitle: campaign ? campaign.title : `General Fund for ${ngo.name}`,
     ngoId: ngo.id,
     ngoName: ngo.name,
-    userId: userId || 'user-rohan',
-    donorName: donorName || 'Rohan Sharma',
-    donorEmail: donorEmail || 'rohan.sharma@example.com',
-    donorPhone: donorPhone || '+91 98765 43210',
+    userId: req.user.id,
+    donorName: req.user.name,
+    donorEmail: req.user.email,
+    donorPhone: req.user.phone || '+91 98765 43210',
     amount: numAmount,
     isAnonymousPublic: Boolean(isAnonymousPublic),
     showDonorName: Boolean(showDonorName),
@@ -780,20 +928,20 @@ app.post('/api/donations', (req, res) => {
 
   db.donations.unshift(newDonation);
 
-  // Add karma points to user
-  const user = db.users.find(u => u.id === (userId || 'user-rohan'));
+  // Credit user karma
+  const user = db.users.find(u => u.id === req.user.id);
   if (user) {
     user.karmaPoints = (user.karmaPoints || 0) + Math.floor(numAmount / 10);
   }
 
-  // Create notification for NGO (Donor name hidden if anonymous!)
+  // Notify NGO (Donor name hidden if anonymous)
   db.notifications.unshift({
     id: `notif-don-${Date.now()}`,
     targetRole: 'ngo',
     ngoId: ngo.id,
     title: `💰 New Donation of ₹${numAmount.toLocaleString('en-IN')}`,
     message: showDonorName 
-      ? `Received from ${donorName || 'Donor'} for ${newDonation.campaignTitle}.`
+      ? `Received from ${req.user.name} for ${newDonation.campaignTitle}.`
       : `Received from an Anonymous Citizen for ${newDonation.campaignTitle}. Donor identity encrypted.`,
     timestamp: new Date().toISOString(),
     read: false,
@@ -810,13 +958,12 @@ app.post('/api/donations', (req, res) => {
 });
 
 // Get donations (Anonymized view based on viewer role)
-app.get('/api/donations', (req, res) => {
+app.get('/api/donations', optionalAuth, (req, res) => {
   const db = readDB();
-  const { role, userId, ngoId, campaignId } = req.query;
+  const { userId, ngoId, campaignId } = req.query;
   let list = [...db.donations];
 
   if (userId) {
-    // A user can always see their own donation details and receipts
     list = list.filter(d => d.userId === userId);
     return res.json({ success: true, count: list.length, data: list });
   }
@@ -828,11 +975,11 @@ app.get('/api/donations', (req, res) => {
     list = list.filter(d => d.campaignId === campaignId);
   }
 
-  // If public or NGO viewing, mask identity unless showDonorName is true or admin
+  const isPlatformAdmin = req.user && req.user.role === 'admin';
+
+  // Apply privacy masking
   const maskedList = list.map(d => {
-    if (role === 'admin') {
-      return d; // Admin has compliance view
-    }
+    if (isPlatformAdmin) return d;
     if (!d.showDonorName && d.isAnonymousPublic) {
       return {
         ...d,
@@ -847,8 +994,8 @@ app.get('/api/donations', (req, res) => {
   res.json({ success: true, count: maskedList.length, data: maskedList });
 });
 
-// Post campaign transparency update
-app.post('/api/campaigns/:id/transparency', (req, res) => {
+// Post campaign transparency update (Protected: NGO or Admin)
+app.post('/api/campaigns/:id/transparency', authenticateToken, requireRole(['ngo', 'admin']), (req, res) => {
   const db = readDB();
   const campaign = db.campaigns.find(c => c.id === req.params.id);
   if (!campaign) return res.status(404).json({ success: false, message: 'Campaign not found' });
@@ -870,20 +1017,20 @@ app.post('/api/campaigns/:id/transparency', (req, res) => {
 });
 
 /* ==========================================================================
-   VOLUNTEERING & QR CHECK-IN API
+   VOLUNTEERING & QR ATTENDANCE API
    ========================================================================== */
 
-// List drives
+// List drives (Public)
 app.get('/api/volunteering', (req, res) => {
   const db = readDB();
   res.json({ success: true, count: db.volunteeringDrives.length, data: db.volunteeringDrives });
 });
 
-// Post new drive (NGO)
-app.post('/api/volunteering', (req, res) => {
+// Post new drive (Protected: NGO or Admin)
+app.post('/api/volunteering', authenticateToken, requireRole(['ngo', 'admin']), (req, res) => {
   const db = readDB();
-  const { ngoId, title, category, date, time, location, slotsTotal, description, skillsNeeded } = req.body;
-  const ngo = db.ngos.find(n => n.id === ngoId) || db.ngos[0];
+  const { title, category, date, time, location, slotsTotal, description, skillsNeeded } = req.body;
+  const ngo = db.ngos.find(n => n.id === req.user.ngoId) || db.ngos[0];
 
   const newDrive = {
     id: `vol-${Date.now().toString().slice(-6)}`,
@@ -906,16 +1053,22 @@ app.post('/api/volunteering', (req, res) => {
   res.status(201).json({ success: true, data: newDrive });
 });
 
-// Volunteer RSVP (Generate digital QR Pass)
-app.post('/api/volunteering/register', (req, res) => {
+// Volunteer RSVP (Protected: Login required)
+app.post('/api/volunteering/register', authenticateToken, (req, res) => {
   const db = readDB();
-  const { driveId, userId, userName, userPhone, userEmail } = req.body;
+  const { driveId } = req.body;
 
   const drive = db.volunteeringDrives.find(d => d.id === driveId);
   if (!drive) return res.status(404).json({ success: false, message: 'Drive not found' });
 
+  // Prevent duplicate registration
+  const existing = db.volunteerRegistrations.find(r => r.driveId === driveId && r.userId === req.user.id);
+  if (existing) {
+    return res.json({ success: true, data: existing, message: 'You are already registered for this drive!' });
+  }
+
   const regId = `vreg-${Date.now().toString().slice(-6)}`;
-  const qrPassToken = `NGO_PASS_${regId}_${driveId}_${userId || 'user'}`;
+  const qrPassToken = `NGO_PASS_${regId}_${driveId}_${req.user.id}`;
 
   const registration = {
     id: regId,
@@ -924,10 +1077,10 @@ app.post('/api/volunteering/register', (req, res) => {
     driveDate: drive.date,
     driveLocation: drive.location,
     ngoName: drive.ngoName,
-    userId: userId || 'user-rohan',
-    userName: userName || 'Rohan Sharma',
-    userPhone: userPhone || '+91 98765 43210',
-    userEmail: userEmail || 'rohan.sharma@example.com',
+    userId: req.user.id,
+    userName: req.user.name,
+    userPhone: req.user.phone || '+91 98765 43210',
+    userEmail: req.user.email,
     status: 'approved',
     checkedIn: false,
     checkInTime: null,
@@ -941,8 +1094,8 @@ app.post('/api/volunteering/register', (req, res) => {
   res.status(201).json({ success: true, data: registration, message: 'Slot confirmed! Digital QR Pass generated.' });
 });
 
-// Volunteer Check-In via QR Scan
-app.post('/api/volunteering/checkin', (req, res) => {
+// Volunteer Check-In via QR Scan (Protected: NGO or Admin)
+app.post('/api/volunteering/checkin', authenticateToken, requireRole(['ngo', 'admin']), (req, res) => {
   const db = readDB();
   const { qrPassToken } = req.body;
 
@@ -958,34 +1111,33 @@ app.post('/api/volunteering/checkin', (req, res) => {
   reg.checkedIn = true;
   reg.checkInTime = new Date().toISOString();
 
-  // Credit user karma
   const user = db.users.find(u => u.id === reg.userId);
   if (user) {
     user.karmaPoints = (user.karmaPoints || 0) + 50;
   }
 
   writeDB(db);
-  res.json({ success: true, data: reg, message: `Check-in successful! Welcome, ${reg.userName}. (+50 Karma)` });
+  res.json({ success: true, data: reg, message: `Check-in successful! Welcome, ${reg.userName}. (+50 Karma Credits)` });
 });
 
-// My registrations
-app.get('/api/volunteering/my-registrations/:userId', (req, res) => {
+// My registrations (Protected)
+app.get('/api/volunteering/my-registrations', authenticateToken, (req, res) => {
   const db = readDB();
-  const myRegs = db.volunteerRegistrations.filter(r => r.userId === req.params.userId);
+  const myRegs = db.volunteerRegistrations.filter(r => r.userId === req.user.id);
   res.json({ success: true, data: myRegs });
 });
 
 /* ==========================================================================
-   ADMIN VERIFICATION & MODERATION API
+   ADMIN GOVERNANCE & MODERATION API (Protected: Admin Only)
    ========================================================================== */
 
-app.get('/api/admin/pending-ngos', (req, res) => {
+app.get('/api/admin/pending-ngos', authenticateToken, requireRole(['admin']), (req, res) => {
   const db = readDB();
   const pending = db.ngos.filter(n => !n.isVerified || n.verificationStatus === 'pending');
   res.json({ success: true, count: pending.length, data: pending });
 });
 
-app.post('/api/admin/verify-ngo/:id', (req, res) => {
+app.post('/api/admin/verify-ngo/:id', authenticateToken, requireRole(['admin']), (req, res) => {
   const db = readDB();
   const ngo = db.ngos.find(n => n.id === req.params.id);
   if (!ngo) return res.status(404).json({ success: false, message: 'NGO not found' });
@@ -1004,7 +1156,7 @@ app.post('/api/admin/verify-ngo/:id', (req, res) => {
   res.json({ success: true, data: ngo, message: `NGO ${action === 'approve' ? 'verified successfully' : 'rejected'}.` });
 });
 
-app.get('/api/admin/analytics', (req, res) => {
+app.get('/api/admin/analytics', authenticateToken, requireRole(['admin']), (req, res) => {
   const db = readDB();
   const totalIncidents = db.incidents.length;
   const resolvedIncidents = db.incidents.filter(i => i.status === 'resolved').length;
@@ -1031,12 +1183,12 @@ app.get('/api/admin/analytics', (req, res) => {
 });
 
 /* ==========================================================================
-   SAHAY AI CHATBOT API (FAQ Knowledgebase + Recommendation Engine)
+   SAHAY AI CHATBOT API (Publicly accessible)
    ========================================================================== */
 
 app.post('/api/chatbot', (req, res) => {
   const db = readDB();
-  const { message, userLocation } = req.body;
+  const { message } = req.body;
 
   if (!message) {
     return res.status(400).json({ success: false, message: 'Message is required' });
@@ -1079,7 +1231,7 @@ app.post('/api/chatbot', (req, res) => {
     });
   }
 
-  // 4. Recommendation query (e.g. "find animal ngo near bandra", "child care near andheri", "volunteer in mumbai")
+  // 4. Recommendation query
   let matchedCategory = null;
   if (query.includes('animal') || query.includes('dog') || query.includes('cat') || query.includes('pet')) matchedCategory = 'animal';
   else if (query.includes('child') || query.includes('kid') || query.includes('orphan')) matchedCategory = 'child';
@@ -1119,7 +1271,7 @@ app.post('/api/chatbot', (req, res) => {
     });
   }
 
-  // Fallback friendly reply
+  // Fallback
   res.json({
     success: true,
     reply: `I am **Sahay AI**, your NGO Connect assistant. I can help you with:\n\n1. 🚨 **Reporting an emergency incident** with live auto-routing\n2. 👶 **CARA-compliant Child Adoption & Elderly Sponsorship** guidance\n3. 🔒 **Anonymous Donations & 80G Tax Receipts**\n4. 🤝 **Volunteering drives & QR Check-in**\n5. 📍 **Finding verified NGOs near your location**\n\nWhat would you like to explore?`,
@@ -1136,25 +1288,20 @@ app.post('/api/chatbot', (req, res) => {
    NOTIFICATIONS API
    ========================================================================== */
 
-app.get('/api/notifications', (req, res) => {
+app.get('/api/notifications', optionalAuth, (req, res) => {
   const db = readDB();
-  const { role, userId, ngoId } = req.query;
+  const { role } = req.query;
+  const effectiveRole = req.user ? req.user.role : (role || 'public');
   let list = [...db.notifications];
 
-  if (role) {
-    list = list.filter(n => n.targetRole === role || n.targetRole === 'all');
-  }
-  if (userId) {
-    list = list.filter(n => !n.userId || n.userId === userId);
-  }
-  if (ngoId) {
-    list = list.filter(n => !n.ngoId || n.ngoId === ngoId);
+  if (effectiveRole) {
+    list = list.filter(n => n.targetRole === effectiveRole || n.targetRole === 'all');
   }
 
   res.json({ success: true, count: list.length, data: list });
 });
 
-app.patch('/api/notifications/:id/read', (req, res) => {
+app.patch('/api/notifications/:id/read', authenticateToken, (req, res) => {
   const db = readDB();
   const notif = db.notifications.find(n => n.id === req.params.id);
   if (notif) notif.read = true;
@@ -1162,9 +1309,14 @@ app.patch('/api/notifications/:id/read', (req, res) => {
   res.json({ success: true });
 });
 
-// Health check
+// Health check (Critical for Render deployment verification)
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString(), platform: 'NGO Connect v1.0' });
+  res.json({
+    status: 'ok',
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    platform: 'NGO Connect Production v1.2'
+  });
 });
 
 // Production Static Serving: Serve client/dist when available
@@ -1179,7 +1331,7 @@ if (fs.existsSync(clientDistPath)) {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`NGO Connect Server running on http://localhost:${PORT}`);
+// Explicit binding to '0.0.0.0' for Linux container and Render proxy compatibility
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✓ NGO Connect Server running on http://0.0.0.0:${PORT} (Node ${process.version})`);
 });
-
